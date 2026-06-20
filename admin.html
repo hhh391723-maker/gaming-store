@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة التحكم - إضافة باك جديد</title>
+    <style>
+        body { background: #0d0f14; color: white; font-family: Tahoma; padding: 50px; }
+        .admin-form { background: #151821; padding: 30px; border-radius: 15px; max-width: 500px; margin: auto; }
+        input, button { width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: none; }
+        input { background: #202533; color: white; }
+        button { background: #cca300; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="admin-form">
+    <h2>إضافة باك لبيس (eFootball)</h2>
+    <input type="text" id="packType" placeholder="نوع الباك (مثال: Big Time & Show Time)">
+    <input type="text" id="packName" placeholder="اسم الباك (مثال: European Club Championship)">
+    <input type="text" id="timerText" placeholder="المدة (مثال: ينتهي في 3 أيام)">
+    <input type="number" id="packPrice" placeholder="السعر بالكوينز (مثال: 900)">
+    
+<label>صورة الغلاف الرئيسية:</label>
+<input type="file" id="mainImageFile" accept="image/*">
+
+ 
+
+    <!-- لسه هنضيف الصور الداخلية لاحقاً في صفحة التفاصيل -->
+  <label>الصور الداخلية للباك (ممكن تختار أكتر من صورة):</label>
+<input type="file" id="internalImagesFiles" accept="image/*" multiple>
+    <button onclick="uploadPack()">رفع الباك للموقع</button>
+    <p id="status"></p>
+</div>
+
+<!-- Firebase Libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+<script>
+// حط نفس الـ Config هنا برضو
+const firebaseConfig = {
+  apiKey: "AIzaSyB3E9e2aFVgrpTm0df7tC_YKskT-MA3hOs",
+  authDomain: "my-pes-shop.firebaseapp.com",
+  projectId: "my-pes-shop",
+  storageBucket: "my-pes-shop.firebasestorage.app",
+  messagingSenderId: "438807292964",
+  appId: "1:438807292964:web:38709635a02d9e1bd8bcb1",
+  measurementId: "G-WFGKMQ8PDY"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+
+async function uploadPack() {
+    const statusText = document.getElementById('status');
+    statusText.innerText = "جاري الرفع... يرجى الانتظار";
+
+    const type = document.getElementById('packType').value;
+    const name = document.getElementById('packName').value;
+    const timer = document.getElementById('timerText').value;
+    const price = document.getElementById('packPrice').value;
+    const file = document.getElementById('mainImageFile').files[0];
+
+    if(!file || !type || !price) {
+        alert("يرجى ملء البيانات واختيار صورة!");
+        return;
+    }
+try {
+    // 1. رفع الصورة الرئيسية
+    const mainImgFormData = new FormData();
+    mainImgFormData.append("image", file);
+    const apiKey = "9da0bebe3c80de1e99712e3c3150efae"; // تنبيه: يفضل مستقبلاً تأمين المفتاح ده
+    
+    const mainResponse = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+        method: "POST",
+        body: mainImgFormData
+    });
+    const mainData = await mainResponse.json();
+    const mainImageUrl = mainData.data.url;
+
+    // 2. رفع الصور الداخلية (لو موجودة)
+    const internalFiles = document.getElementById('internalImagesFiles').files;
+    let internalImagesUrls = [];
+    
+    statusText.innerText = "جاري رفع الصور الداخلية... يرجى الانتظار";
+    
+    for (let i = 0; i < internalFiles.length; i++) {
+        const intFormData = new FormData();
+        intFormData.append("image", internalFiles[i]);
+        const intResponse = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: "POST",
+            body: intFormData
+        });
+        const intData = await intResponse.json();
+        internalImagesUrls.push(intData.data.url);
+    }
+
+    // 3. حفظ البيانات في الداتابيز (شاملة مصفوفة الصور الداخلية)
+    statusText.innerText = "جاري حفظ البيانات...";
+    await db.collection("pes_packs").add({
+        packType: type,
+        packName: name,
+        timerText: timer,
+        price: price,
+        mainImage: mainImageUrl,
+        internalImages: internalImagesUrls, // هنا ضفنا الصور الداخلية
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+statusText.innerText = "تمت الإضافة بنجاح! افتح الموقع هتلاقيه ظهر.";
+    statusText.style.color = "lime";
+
+} catch (error) {
+    console.error(error);
+    statusText.innerText = "حدث خطأ أثناء الرفع!";
+    statusText.style.color = "red";
+}
+}
+</script>
+</body>
+</html>

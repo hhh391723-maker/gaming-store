@@ -1,0 +1,367 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+    font-family: 'Poppins', sans-serif;
+}
+body {
+    background: #ffffff;
+    direction: rtl;
+    text-align: right;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 5%;
+    width: 100%;
+    margin: 0 ;
+    background-color: #ffffff;
+    z-index: 1000;
+}
+.main-logo {
+    width: 200px;
+    max-width: 100px;
+    height: auto;
+}
+
+hr{ 
+    opacity: 10%
+}
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5rem auto;
+    max-width: 1200px;
+    position: relative;
+    flex-direction: row-reverse;
+    margin-top: 100px;
+}
+.arrow {
+   position: absolute;
+   transform: translateY(-5.5rem) translate(1.5rem);
+   z-index: -1;
+}
+.herosub {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 2;
+   
+}
+.name {
+    font-size: 3rem;
+    color: #065350;
+}
+.title {
+    font-size: 1.5rem;
+    color: #032c2b;
+}
+.heroBtns {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.hirMe {
+    background: #0a2324;
+    color: #ffffff;
+    border-radius: 24px;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    text-shadow: 0px 4px 4px rgba(32, 6, 54, 0.5);
+}
+html, body {
+        scroll-behavior: smooth!important;
+        overflow-x: hidden;
+    }
+.aboutMe {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5rem auto;
+    max-width: 1400px;
+    gap: 16rem;
+}
+.aboutMeImg {
+    width: 40%;
+    height: auto;
+}
+.textcontainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 50%;
+}
+.textcontainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.textTitle h1 {
+    font-size: 4rem;
+}
+.aboutMepar {
+    font-size: 1.5rem;
+    color: #994d82;
+    max-width: 1000px;
+    text-align: justify;
+    color: #000000;
+}
+.aboutName {
+    text-align: right;
+    color: #01101a;
+}
+.aboutTitle {
+    color: #01101a;
+}
+.aboutMe {
+display: flex;
+flex-direction: row;
+align-items: center;
+justify-content: space-between;
+gap: 4rem;
+padding: 5rem 2rem;
+max-width: 1200px;
+margin: 0 auto;
+position: relative;
+
+}
+.textcontainer {
+    z-index: 2;
+flex: 1;
+}
+.aboutMeImg {
+position: absolute;
+left: 0;
+top: 0;
+z-index: -1;
+opacity: 1;
+width: 40%;
+}
+.games-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+gap: 25px;
+width: 100%;
+max-width: 1100px;
+margin: 30px auto;
+padding: 0 20px;
+}
+.interactive-game-card {
+background: #1e2235; 
+border: 1px solid #3d425a;
+border-radius: 16px;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+cursor: pointer;
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+.interactive-game-card:hover {
+transform: translateY(-8px);
+border-color: #007bff; 
+box-shadow: 0 12px 25px rgba(0, 123, 255, 0.2);
+}
+.game-image-box {
+width: 100%;
+height: 160px;
+background: #151824;
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 15px;
+border-bottom: 1px solid #3d425a;
+
+}
+.game-image-box img {
+max-width: 100%;
+max-height: 100%;
+object-fit: contain;
+border-radius: 8px;
+transition: transform 0.3s ease;
+}
+.interactive-game-card:hover .game-image-box img {
+transform: scale(1.06); 
+}
+.game-info-box {
+padding: 20px;
+display: flex;
+flex-grow: 1;
+flex-direction: column;
+gap: 12px;
+text-align: center;
+}
+.game-info-box h2 {
+font-size: 1.3rem;
+color: #ffffff;
+margin: 0;
+font-weight: 600;
+
+}
+.game-info-box p {
+font-size: 0.85rem;
+color: #b0b5c1;
+margin: 0;
+line-height: 1.5;
+flex-grow: 1;
+}
+.action-btn {
+background: #ffffff;
+color: #1e2235;
+border: none;
+border-radius: 20px;
+padding: 8px 25px;
+font-size: 0.9rem;
+font-weight: bold;
+cursor: pointer;
+transition: background-color 0.2s, color 0.2s;
+align-self: center;
+}
+.interactive-game-card:hover .action-btn {
+background: #007bff;
+color: #ffffff;
+}
+@media (max-width: 480px) {
+    .games-wrapper {
+        transform: scale(0.8);
+    }
+}
+@media (max-width: 1023px) {
+.heder {
+margin-left: 1rem;
+margin-right: 1rem;
+}
+#gamesPage {
+    background-color: #ffffff;
+    min-height: 80vh;
+    padding: 2rem;
+    text-align: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+}
+.hero {
+flex-direction: column;
+text-align: center;
+gap: 2rem;
+}
+.heroImg {
+width: 100%;
+max-width: 400px;
+}
+.name, .title {
+font-size: 2rem;
+}
+.arrow {
+display: none;
+}
+.aboutMe {
+display: flex;
+flex-direction: column-reverse;
+align-items: center;
+gap: 2rem;
+}
+.textcontainer {
+position: static;
+display: flex;
+flex-direction: column;
+align-items: center;
+text-align: center;
+margin-top: 0rem 1rem;
+gap: 1rem;
+}
+.aboutName, .aboutTitle {
+font-size: 1.5rem;
+position: static;
+margin: 0;
+}
+.main-logo {
+width: 150px;
+max-width: 150px;
+height: auto;
+flex-shrink: 0;
+}
+.light {
+width: 60px;
+}
+.aboutMeImg {
+position: static;
+width: 100%;
+max-width: 300px;
+height: auto;
+}
+.works {
+padding: 0;
+}
+.worksContainer {
+padding: 5rem 0rem;
+gap: 3rem;
+}
+.projectTitle {
+margin-left: 1rem;
+}
+.works ul {
+flex-direction: column;
+gap: 1rem;
+}
+.contactContainer {
+margin: 10rem 5rem;
+gap: 2rem;
+}
+.contacts {
+flex-direction: column;
+}
+}
+#mainContent {
+    display: block;
+}
+#gamesContent {
+    display: none;
+}
+#gamesPage {
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   text-align: center;
+   width: 100%;
+   min-height: 70vh;
+   gap: 20px;
+}
+.navigation ul {
+display: flex;
+justify-content: center;
+align-items: center;
+background-color: #7b52d9; 
+border-radius: 50px; 
+padding: 8px 10px;
+list-style: none;
+margin: 20px auto;
+width: fit-content; 
+gap: 5px; 
+box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); 
+}
+.navigation ul li a {
+text-decoration: none;
+color: #ffffff; 
+font-size: 16px;
+font-weight: 600;
+padding: 10px 25px;
+border-radius: 40px; 
+transition: all 0.3s ease; 
+display: block;
+}
+.navigation ul li a:hover {
+background-color: rgba(255, 255, 255, 0.2);
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+transform: translateY(-2px); 
+
+}
+
+
