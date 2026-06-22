@@ -611,10 +611,10 @@ window.onload = () => {
     loadPacks();
 };
 // --- كود إغلاق الشات وإلغاء الطلب ---
-closeChat = document.getElementById('close-chat-btn');
+const closeChatBtn = document.getElementById('close-chat-btn');
 
-if (closeChat) {
-    closeChat.addEventListener('click', async () => {
+if (closeChatBtn) {
+    closeChatBtn.addEventListener('click', async () => {
         // 1. إخفاء واجهة الشات أولاً
         const chatInterface = document.getElementById('chat-interface'); // اتأكد إن ده الـ ID بتاع واجهة الشات
         if (chatInterface) chatInterface.style.display = 'none';
@@ -636,6 +636,31 @@ if (closeChat) {
         }
     });
 }
+function endMediatorChat(chatId) {
+    // 1. نمسح المحادثة من الفايربيز عشان الحساب يرجع متاح
+    db.collection('chats').doc(chatId).delete().then(() => {
+        
+        // 2. تنبيه وتحديث الواجهة بعد الحذف الناجح
+        alert('المشتري ألغى الطلب أو غادر المحادثة');
+
+        document.getElementById('chat-box').style.display = 'none';
+        document.getElementById('trusted-dashboard').style.display = 'block';
+        
+        connectAsTrusted();
+
+    }).catch((error) => {
+        console.error("حدث خطأ أثناء إنهاء المحادثة: ", error);
+    });
+}
+        
+    
+window.addEventListener('beforeunload', () => {
+    // لو المشتري كان فاتح محادثة وقفل الصفحة
+    if (localStorage.getItem('pendingPurchase') === 'true' && typeof chatDocRef !== 'undefined') {
+        chatDocRef.delete();
+        localStorage.removeItem('pendingPurchase');
+    }
+});
 </script>
 </body>
 </html>
