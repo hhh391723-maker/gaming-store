@@ -290,6 +290,28 @@
   text-align: right;
 }
 .trusted-data span { color: #ff4a4a; font-weight: bold; }
+    .buyer-waiting-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 41, 0.95);
+    display: none; /* مخفي في البداية */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    color: #fff;
+    backdrop-filter: blur(5px);
+}
+.loader-spinner {
+    border: 5px solid #232838;
+    border-top: 5px solid #cca300; /* نفس لون الزرار بتاعك */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+ @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -299,6 +321,11 @@
     <a href="index.html#games" class="back-capsule-btn">
         <i class="arrow-icon"></i>
         <span>العودة</span>
+        </div> </div> </div> <div id="buyerWaitingOverlay" class="buyer-waiting-overlay">
+    <div class="loader-spinner"></div>
+    <h3>جاري الاتصال مع تراستيد...</h3>
+    <p style="color: #8a94a6; margin-top: 10px;">يرجى الانتظار، سيتم تحويلك للمحادثة قريباً</p>
+</div>
     </a>
 
     <div class="section-title">eFootball</div>
@@ -328,7 +355,7 @@
     <div class="chat-header">
   <div style="display: flex; align-items: center;">
     <div style="font-weight: bold; font-size: 18px;">محادثة الوسيط</div>
-    <button id="payBtn" class="pay-btn">التقدم للدفع</button>
+    <button id="payBtn" class="pay-btn" style="display: none;">التقدم للدفع</button>
   </div>
   <button class="close-chat-btn" id="closeChat">رجوع للمتجر</button>
 </div>
@@ -362,14 +389,40 @@
   const sendMsgBtn = document.getElementById('sendMsgBtn');
   const payBtn = document.getElementById('payBtn');
   let currentSelectedPack = null; 
+  let currentChatId = null;
  const dynamicContainer = document.getElementById('dynamic-packs-container');
 if (dynamicContainer) {
-    dynamicContainer.addEventListener('click', (e) => {
+    dynamicContainer.addEventListener('click', async (e) => {
         const coinBtn = e.target.closest('.btn-coins');
         if (coinBtn) {
             e.preventDefault();
-            modal.style.display = 'flex';
-            currentSelectedPack = coinBtn.closest('.pack-card');
+            
+            const pack = coinBtn.closest('.pack-card');
+            const packId = pack.getAttribute('data-id');
+
+            // --- بداية التعديل: فحص حالة الحساب في الفايربيز ---
+            try {
+                // بنبحث في الشاتات لو الحساب ده حالته waiting أو active
+                const checkQuery = await db.collection('active_chats')
+                    .where('packId', '==', packId)
+                    .where('status', 'in', ['waiting', 'active'])
+                    .get();
+
+                if (!checkQuery.empty) {
+                    // لو لقينا بيانات، معناه إن الحساب معلق
+                    alert('عذراً، هذا الحساب معلق حالياً (قيد التنفيذ مع مشتري آخر).');
+                    return; // بنوقف الكود عشان النافذة متفتحش
+                }
+
+                // لو الحساب متاح، بنفتح النافذة عادي
+                modal.style.display = 'flex';
+                currentSelectedPack = pack;
+
+            } catch (error) {
+                console.error("خطأ في فحص حالة الحساب:", error);
+                alert('حدث خطأ في الاتصال، جرب مرة تانية.');
+            }
+            // --- نهاية التعديل ---
         }
     });
 }
@@ -377,26 +430,74 @@ if (dynamicContainer) {
   const hideModal = () => modal.style.display = 'none';
   closeModal.addEventListener('click', hideModal);
   cancelPurchase.addEventListener('click', hideModal);
-  continuePurchase.addEventListener('click', () => {
-    hideModal();
+continuePurchase.addEventListener('click', async () => {
+    hideModal(); // قفل نافذة التأكيد
+// قفل حقل الإدخال وزرار الإرسال حتى ينضم الوسيط
+msgInput.disabled = true;
+sendMsgBtn.disabled = true;
+msgInput.placeholder = "انتظر دخول الوسيط لكتابة رسالتك...";
+    // إظهار واجهة الشات فوراً للمشتري بمجرد الضغط
     chatInterface.style.display = 'flex';
-    chatArea.innerHTML = ''; 
-    if(payBtn) payBtn.style.display = 'block';
-    setTimeout(() => {
-      botReply("أهلاً بك يا فندم في تراستيد، جاري مراجعة طلبك... إزاي نقدر نساعدك في الشحن؟");
-    }, 600);
-    setTimeout(() => {
-      chatArea.innerHTML += `
-        <div class="msg" style="background-color: #2c0b0e; border: 1px dashed #ff4a4a; color: #fff; align-self: center; width: 90%; text-align: right; margin-top: 15px; font-size: 14px;">
-          <span style="color: #ff4a4a; font-weight: bold; font-size: 16px;">[بيانات الحساب - للتراستيد فقط]</span><br><br>
-          طريقة الربط: فيسبوك<br>
-          الايميل: info@example.com<br>
-          الباسورد: 123456789
+    
+    // إضافة رسالة "جاري الاتصال" داخل الشات نفسه
+    chatArea.innerHTML = `
+        <div class="system-msg" id="waitingMsg" style="text-align: center; color: #ff9800; font-weight: bold; margin-bottom: 15px;">
+            ⏳ جاري البحث عن وسيط موثوق، يرجى الانتظار داخل المحادثة...
         </div>
-      `;
-      chatArea.scrollTop = chatArea.scrollHeight;
-    }, 4000); 
-  });
+    `;
+
+    try {
+        // إنشاء طلب محادثة في الفايربيز
+        const newChatRef = await db.collection('active_chats').add({
+            packId: currentSelectedPack.getAttribute('data-id'),
+            status: 'waiting',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+currentChatId = newChatRef.id;
+        // مراقبة المحادثة عشان نعرف إمتى الوسيط (التراستيد) دخل
+        db.collection('active_chats').doc(newChatRef.id).onSnapshot((doc) => {
+            const chatData = doc.data();
+
+            // من أول ما الوسيط يغير الحالة لـ active
+            if (chatData && chatData.status === 'active') {
+                
+                // إخفاء رسالة "جاري البحث" 
+                const waitingMsg = document.getElementById('waitingMsg');
+                if (waitingMsg) {
+                    waitingMsg.style.display = 'none'; 
+                }
+
+                // كتابة رسالة نجاح الاتصال جوه الشات
+                chatArea.innerHTML += `
+                    <div class="system-msg" style="text-align: center; color: #4CAF50; font-weight: bold; margin-bottom: 15px;">
+                        تم الاتصال بالوسيط ${chatData.mediatorName} بنجاح ✔️
+                    </div>
+                `;
+                // تفعيل حقل الإدخال وزرار الإرسال بعد دخول الوسيط
+msgInput.disabled = false;
+sendMsgBtn.disabled = false;
+msgInput.placeholder = "اكتب رسالتك هنا...";
+                
+                // إظهار زر الدفع للمشتري
+                const payBtn = document.getElementById('payBtn');
+                if (payBtn) payBtn.style.display = 'block';
+
+                // التمرير التلقائي لأسفل الشات عشان يشوف الرسالة الجديدة
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+        });
+
+    } catch (error) {
+        console.error("خطأ في إنشاء المحادثة:", error);
+        
+        // عرض الخطأ داخل الشات لو حصلت مشكلة
+        chatArea.innerHTML += `
+            <div class="system-msg" style="text-align: center; color: #f44336; font-weight: bold; margin-bottom: 15px;">
+                ❌ حصلت مشكلة في الاتصال بالسيرفر، تأكد من اتصالك بالإنترنت وجرب تاني.
+            </div>
+        `;
+    }
+});
 
   closeChat.addEventListener('click', () => {
     chatInterface.style.display = 'none';
@@ -439,25 +540,26 @@ if (payBtn) {
         `;
         chatArea.scrollTop = chatArea.scrollHeight;
 
-        if (currentSelectedPack) {
-            // هنجيب الـ ID اللي ضفناه في الخطوة التانية
-            const packId = currentSelectedPack.getAttribute('data-id'); 
-            
-            try {
-                // مسح الباك من الداتابيز
-                await db.collection("pes_packs").doc(packId).delete();
-                console.log("تم مسح الباك من قاعدة البيانات");
-                
-                // مسحه من الشاشة
-                currentSelectedPack.remove();
-                currentSelectedPack = null;
-            } catch (error) {
-                console.error("خطأ في مسح الباك:", error);
-            }
-        }
+if (currentSelectedPack) {
+    // 1. عرف المتغير أولاً
+    const packId = currentSelectedPack.getAttribute('data-id');
+
+    // 2. ابدأ الـ try عشان تنفذ الأوامر
+    try {
+        // 3. استخدم المتغير في الحذف بعد ما اتعرف
+        await db.collection("pes_packs").doc(packId).delete();
+        
+        // 4. امسح من الشاشة
+        currentSelectedPack.remove();
+        currentSelectedPack = null;
+        console.log("تم الحذف بنجاح من الداتابيز والشاشة");
+        
+    } catch (error) {
+        console.error("خطأ في حذف البيانات: ", error);
+    }
+}
     });
 }
-  // 1. حط إعدادات مشروعك في فايربيس هنا (هتجيبها من موقع فايربيس لما تعمل المشروع)
 const firebaseConfig = {
   apiKey: "AIzaSyB3E9e2aFVgrpTm0df7tC_YKskT-MA3hOs",
   authDomain: "my-pes-shop.firebaseapp.com",
@@ -467,24 +569,17 @@ const firebaseConfig = {
   appId: "1:438807292964:web:38709635a02d9e1bd8bcb1",
   measurementId: "G-WFGKMQ8PDY"
 };
-
-// 2. تشغيل فايربيس
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
-
-// 3. دالة جلب الباكات وعرضها في الموقع
 function loadPacks() {
   const container = document.getElementById('dynamic-packs-container');
-  container.innerHTML = '<h3>جاري تحميل الباكات...</h3>'; // رسالة مؤقتة
-
+  container.innerHTML = '<h3>جاري تحميل الباكات...</h3>'; 
   db.collection("pes_packs").get().then((querySnapshot) => {
-    container.innerHTML = ''; // تفريغ الرسالة المؤقتة
-    
+    container.innerHTML = ''; 
     querySnapshot.forEach((doc) => {
       const pack = doc.data();
-      // هنا بنبني نفس تصميمك الـ HTML بالظبط بس بالبيانات اللي جاية من الداتابيز
       container.innerHTML += `
       <div class="pack-card" data-id="${doc.id}">
             <div class="pack-image-area">
@@ -515,6 +610,32 @@ function loadPacks() {
 window.onload = () => {
     loadPacks();
 };
+// --- كود إغلاق الشات وإلغاء الطلب ---
+closeChat = document.getElementById('close-chat-btn');
+
+if (closeChat) {
+    closeChat.addEventListener('click', async () => {
+        // 1. إخفاء واجهة الشات أولاً
+        const chatInterface = document.getElementById('chat-interface'); // اتأكد إن ده الـ ID بتاع واجهة الشات
+        if (chatInterface) chatInterface.style.display = 'none';
+        
+        // 2. لو فيه شات متسجل، هنمسحه من الفايربيز
+        if (typeof currentChatId !== 'undefined' && currentChatId) {
+            try {
+                await db.collection('active_chats').doc(currentChatId).delete();
+                console.log("تم إلغاء الطلب، والحساب رجع متاح");
+                
+                // 3. تصفير المتغيرات
+                currentChatId = null;
+                const chatArea = document.getElementById('chat-messages'); // اتأكد من الـ ID
+                if (chatArea) chatArea.innerHTML = ''; 
+                
+            } catch (error) {
+                console.error("حدث خطأ أثناء مسح الطلب: ", error);
+            }
+        }
+    });
+}
 </script>
 </body>
 </html>

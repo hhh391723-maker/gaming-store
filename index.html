@@ -34,10 +34,20 @@
         background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); 
         display: none; justify-content: center; align-items: center; z-index: 100000;
     }
-    .login-card {
-        background: #ffffff; padding: 45px 40px; border-radius: 20px; text-align: center; 
-        width: 90%; max-width: 380px; box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-    }
+   .login-card {
+    background: #ffffff;
+    width: 100vw; /* بيفرد العرض على مساحة الشاشة بالكامل */
+    height: 100vh; /* بيفرد الطول على مساحة الشاشة بالكامل */
+    max-width: none; /* بيلغي أي تحديد قديم للعرض */
+    margin: 0;
+    padding: 20px; 
+    border-radius: 0; /* بيلغي الحواف الدائرية */
+    box-sizing: border-box; /* بيمنع أي مساحات زيادة تخرج بره الشاشة */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
     .btn-guest {
         background: #ffffff; border: 2px solid #e2e8f0; color: #475569;
         padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: bold;
@@ -69,8 +79,8 @@
     
     .login-wrapper {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); 
-        display: none; justify-content: center; align-items: center; z-index: 100000;
+        background: rgba(15, 23, 42, 0.85); z-index: 9999; display: flex; justify-content: center; align-items: center;
+
     }
     .login-card {
         background: #ffffff; padding: 45px 40px; border-radius: 20px; text-align: center; 
@@ -83,23 +93,79 @@
         transition: all 0.2s ease; margin-top: 15px;
     }
     .btn-guest:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; 
+    min-width: 320px;
+}
+#trustedCodeInput {
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 16px;
+    text-align: center;
+    outline: none;
+}
+#trustedCodeInput:focus {
+    border-color: #0f172a;
+}
+#confirmTrustedBtn, #closeModalBtn {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: 0.2s;
+}
+#confirmTrustedBtn {
+    background-color: #0f172a;
+    color: white;
+}
+#closeModalBtn {
+    background-color: #ef4444;
+    color: white;
+}
+#confirmTrustedBtn:hover, #closeModalBtn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
 </style>
 <div id="loginPage" class="login-wrapper">
+    <button id="trustedLoginBtn" class="floating-support-btn" title="دخول الوسطاء">
+        <svg viewBox="0 0 24 24" fill="white" width="22" height="22">
+            <path d="M12 3c-4.97 0-9 4.03-9 9v7c0 1.1.9 2 2 2h4v-8H5v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-4v8h4c1.1 0 2-.9 2-2v-7c0-4.97-4.03-9-9-9z"/>
+        </svg>
+    </button> 
     <div class="login-card">
-        <h2 style="color: #0f172a; margin-bottom: 8px; font-family: sans-serif; font-size: 26px; font-weight: 800;">مرحباً بك</h2>
+        <h2 style="color: #0f172a; margin-bottom: 8px; font-family: sans-serif; font-size: 24px; font-weight: 800;">مرحباً بك</h2>
         <p style="color: #64748b; margin-bottom: 35px; font-size: 14px; font-family: sans-serif;">يرجى تسجيل الدخول للمتابعة</p>
-        
-        <div style="display: flex; justify-content: center;">
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
             <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
             <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
         </div>
-
-        <button onclick="loginAsGuest()" class="btn-guest">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            التصفح كضيف
-        </button>
+        <div id="trustedModal" style="display: none;" class="modal-trusted">
+            <div class="modal-content">
+                <h3>تسجيل حساب موثوق</h3>
+                <p>برجاء إدخال كود التفعيل المستلم من المالك:</p>
+                <input type="text" id="trustedCodeInput" placeholder="مثال: A1b2C3d4E5" maxlength="10">
+                <button id="confirmTrustedBtn">تأكيد وتفعيل الحساب</button>
+                <button id="closeModalBtn">إلغاء</button>
+            </div>
+        </div>
+        <div>
+            <button onclick="loginAsGuest()" class="btn-guest">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                الدخول كضيف
+            </button>
+        </div>
+        
     </div>
-</div>
 </div>
 <header>
     <img src="assets/svg/logo.jpg" alt="Musaabk99 logo" class="main-logo" />
@@ -108,6 +174,11 @@
             <li><a  href="#" onclick="showGames(); return false;">ألعابي</a></li>
             <li><a href="#myWorks">myWork</a></li>
             <li><a href="#contactMe">Contact</a></li>
+            <li id="mediatorCallLi" style="display: none; margin-right: 15px;">
+      <button id="mediatorCallBtn" class="nav-call-btn">
+          اتصال 📞
+      </button>
+  </li>
 <li id="userProfile" style="display: none; position: relative; list-style: none; margin-left: auto; align-items: center;">
     <img id="userAvatar" src="" alt="User" style="width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: 2px solid #2563eb; transition: transform 0.2s; object-fit: cover;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
     
@@ -151,7 +222,6 @@
     <section class="aboutMe" id="aboutMe">
         </div>
     </section>
-
 </div>
 <div id="gamesPage" style="display: none;">
 <div class="games-wrapper">
@@ -198,7 +268,108 @@
 </div>
 </div>
 </div> 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB3E9e2afVgrpTm0df7tC_YkSkT-MA3hOs",
+    authDomain: "my-pes-shop.firebaseapp.com",
+    projectId: "my-pes-shop",
+    storageBucket: "my-pes-shop.firebasestorage.app",
+    messagingSenderId: "438807292964",
+    appId: "1:438807292964:web:38709635a02d9e1bd8bcb1",
+    measurementId: "G-WFGKMO8PDY"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
  <script>
+document.getElementById('trustedLoginBtn').addEventListener('click', () => {
+    document.getElementById('trustedModal').style.display = 'block';
+});
+document.getElementById('closeModalBtn').addEventListener('click', () => {
+    document.getElementById('trustedModal').style.display = 'none';
+});
+document.getElementById('confirmTrustedBtn').addEventListener('click', async () => {
+    const inputCode = document.getElementById('trustedCodeInput').value.trim();
+    if (inputCode === '') {
+        alert('برجاء إدخال كود التفعيل أولاً!');
+        return;
+    }
+    try {
+        const querySnapshot = await db.collection('trusted_codes')
+            .where('code', '==', inputCode)
+            .where('used', '==', false)
+            .get();
+
+        if (querySnapshot.empty) {
+            alert('الكود غير صحيح، أو تم استخدامه من قبل!');
+            return;
+        }
+        querySnapshot.forEach(async (doc) => {
+            await db.collection('trusted_codes').doc(doc.id).update({
+                used: true
+            });
+
+            localStorage.setItem('userRole', 'trusted');
+            localStorage.setItem('loginType', 'trusted');
+            localStorage.setItem('userName', 'وسيط موثوق');
+            localStorage.setItem('userPicture', 'https://cdn-icons-png.flaticon.com/512/149/149071.png');
+
+            alert('تم تفعيل حساب التراستيد بنجاح! 🎉');
+            window.location.reload();
+        });
+    } catch (error) {
+        console.error('خطأ في السيرفر أثناء التحقق: ', error);
+        alert('حدث خطأ ما، يرجى المحاولة مرة أخرى.');
+    }
+});
+const mediatorCallBtn = document.getElementById('mediatorCallBtn');
+
+if (mediatorCallBtn) {
+    mediatorCallBtn.addEventListener('click', async () => {
+        // تغيير شكل الزرار
+        const originalText = mediatorCallBtn.innerHTML;
+        mediatorCallBtn.innerHTML = 'جاري البحث...';
+        mediatorCallBtn.style.pointerEvents = 'none'; // منع الضغط مرتين
+
+        try {
+            // البحث عن مشتري منتظر (حد داس على continuePurchase في pes.html)
+            const waitingChatsRef = db.collection('active_chats')
+                                      .where('status', '==', 'waiting')
+                                      .limit(1); // بياخد محادثة واحدة بس عشان مشكلة الـ 50 يوزر
+            
+            const snapshot = await waitingChatsRef.get();
+
+            if (snapshot.empty) {
+                alert('مفيش طلبات شراء في الانتظار حالياً.');
+                mediatorCallBtn.innerHTML = originalText;
+                mediatorCallBtn.style.pointerEvents = 'auto';
+                return;
+            }
+
+            // تحديث المحادثة عشان المشتري تفتحله شاشة الشات
+            const chatDoc = snapshot.docs[0];
+            await db.collection('active_chats').doc(chatDoc.id).update({
+                status: 'active',
+                mediatorName: localStorage.getItem('username') || 'وسيط موثوق'
+            });
+
+            // تغيير الزرار لمتصل
+            mediatorCallBtn.innerHTML = 'متصل ✔️';
+            mediatorCallBtn.style.backgroundColor = '#27ae60';
+            
+            // المفروض هنا تفتح واجهة الشات للوسيط نفسه عشان يكلم المشتري
+            console.log("تم استلام الطلب وفتح الشات للمشتري");
+
+        } catch (error) {
+            console.error('خطأ:', error);
+            mediatorCallBtn.innerHTML = originalText;
+            mediatorCallBtn.style.pointerEvents = 'auto';
+        }
+    });
+}
 function showGames() {
     document.getElementById('mainContent').style.display = 'none';
     document.getElementById('gamesPage').style.display = 'flex';
@@ -235,7 +406,12 @@ function loginAsGuest() {
     const guestPic = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
     saveSession("guest", guestPic, "زائر", "(وضع التصفح كضيف)");
 }
-
+document.getElementById('trustedLoginBtn').addEventListener('click', function() {
+    document.getElementById('trustedModal').style.display = 'flex'; 
+});
+document.getElementById('closeModalBtn').addEventListener('click', function() {
+    document.getElementById('trustedModal').style.display = 'none';
+});
 function saveSession(type, picture, name, email) {
     localStorage.setItem("loginType", type);
     localStorage.setItem("userPicture", picture);
@@ -243,7 +419,6 @@ function saveSession(type, picture, name, email) {
     localStorage.setItem("userEmail", email);
     applyLoginState(type, picture, name, email);
 }
-
 function applyLoginState(type, picture, name, email) {
     document.getElementById("loginPage").style.display = "none";
     const userProfile = document.getElementById("userProfile");
@@ -253,19 +428,26 @@ function applyLoginState(type, picture, name, email) {
         userAvatar.src = picture;
     }
 }
-
+window.addEventListener('DOMContentLoaded', () => {
+    const userRole = localStorage.getItem('userRole');
+    
+  if (userRole === 'trusted') {
+    const loginPage = document.getElementById('loginPage');
+    if (loginPage) loginPage.style.display = 'none';
+   const callLi = document.getElementById('mediatorCallLi');
+if (callLi) callLi.style.display = 'block';
+    const supportBtn = document.getElementById('trustedLoginBtn');
+    if (supportBtn) supportBtn.style.display = 'none';
+}
+});
 function upgradeToGoogle() {
     document.getElementById("logoutDropdown").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
 }
-
 function logout() {
     localStorage.clear();
-    document.getElementById("logoutDropdown").style.display = "none";
-    document.getElementById("userProfile").style.display = "none";
-    document.getElementById("loginPage").style.display = "flex";
+    window.location.reload();
 }
-
 function loginSuccess(pictureUrl) {
     document.getElementById("loginPage").style.display = "none";
     const userProfile = document.getElementById("userProfile");
