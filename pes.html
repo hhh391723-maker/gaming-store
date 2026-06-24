@@ -294,7 +294,7 @@
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 41, 0.95);
-    display: none; /* مخفي في البداية */
+    display: none; 
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -304,7 +304,7 @@
 }
 .loader-spinner {
     border: 5px solid #232838;
-    border-top: 5px solid #cca300; /* نفس لون الزرار بتاعك */
+    border-top: 5px solid #cca300; 
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -334,9 +334,7 @@
     <a href="admin.html" style="background: #cca300; padding: 10px 20px; color: black; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">+ إضافة باك جديد</a>
 </div>
 
-    <div class="packs-container" id="dynamic-packs-container"></div>
-       
-
+    <div class="packs-container" id="dynamic-packs-container"></div>   
     </div>
 <div class="modal-overlay" id="purchaseModal">
   <div class="modal-box">
@@ -399,98 +397,90 @@ if (dynamicContainer) {
             
             const pack = coinBtn.closest('.pack-card');
             const packId = pack.getAttribute('data-id');
-
-            // --- بداية التعديل: فحص حالة الحساب في الفايربيز ---
             try {
-                // بنبحث في الشاتات لو الحساب ده حالته waiting أو active
                 const checkQuery = await db.collection('active_chats')
                     .where('packId', '==', packId)
                     .where('status', 'in', ['waiting', 'active'])
                     .get();
-
                 if (!checkQuery.empty) {
-                    // لو لقينا بيانات، معناه إن الحساب معلق
                     alert('عذراً، هذا الحساب معلق حالياً (قيد التنفيذ مع مشتري آخر).');
-                    return; // بنوقف الكود عشان النافذة متفتحش
+                    return; 
                 }
-
-                // لو الحساب متاح، بنفتح النافذة عادي
                 modal.style.display = 'flex';
                 currentSelectedPack = pack;
-
             } catch (error) {
                 console.error("خطأ في فحص حالة الحساب:", error);
                 alert('حدث خطأ في الاتصال، جرب مرة تانية.');
             }
-            // --- نهاية التعديل ---
         }
     });
 }
+ const hideModal = async () => {
+    modal.style.display = 'none';
+    
+    // التأكد إن في حساب تم اختياره
+    if (currentSelectedPack) {
+        const packId = currentSelectedPack.getAttribute('data-id');
+        try {
+            // البحث عن الطلب المعلق الخاص بهذا الحساب
+            const chatQuery = await db.collection('active_chats')
+                .where('packId', '==', packId)
+                .where('status', '==', 'waiting')
+                .get();
 
-  const hideModal = () => modal.style.display = 'none';
+            // مسح الطلب من الداتابيز
+            chatQuery.forEach(async (doc) => {
+                await db.collection('active_chats').doc(doc.id).delete();
+            });
+            console.log("تم إلغاء الطلب ورجوع الحساب للمتجر");
+        } catch (error) {
+            console.error("خطأ في إلغاء الطلب:", error);
+        }
+    }
+};
   closeModal.addEventListener('click', hideModal);
   cancelPurchase.addEventListener('click', hideModal);
 continuePurchase.addEventListener('click', async () => {
-    hideModal(); // قفل نافذة التأكيد
-// قفل حقل الإدخال وزرار الإرسال حتى ينضم الوسيط
+
+    hideModal(); 
 msgInput.disabled = true;
 sendMsgBtn.disabled = true;
 msgInput.placeholder = "انتظر دخول الوسيط لكتابة رسالتك...";
-    // إظهار واجهة الشات فوراً للمشتري بمجرد الضغط
     chatInterface.style.display = 'flex';
-    
-    // إضافة رسالة "جاري الاتصال" داخل الشات نفسه
     chatArea.innerHTML = `
         <div class="system-msg" id="waitingMsg" style="text-align: center; color: #ff9800; font-weight: bold; margin-bottom: 15px;">
             ⏳ جاري البحث عن وسيط موثوق، يرجى الانتظار داخل المحادثة...
         </div>
     `;
-
     try {
-        // إنشاء طلب محادثة في الفايربيز
         const newChatRef = await db.collection('active_chats').add({
             packId: currentSelectedPack.getAttribute('data-id'),
             status: 'waiting',
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 currentChatId = newChatRef.id;
-        // مراقبة المحادثة عشان نعرف إمتى الوسيط (التراستيد) دخل
         db.collection('active_chats').doc(newChatRef.id).onSnapshot((doc) => {
             const chatData = doc.data();
-
-            // من أول ما الوسيط يغير الحالة لـ active
             if (chatData && chatData.status === 'active') {
-                
-                // إخفاء رسالة "جاري البحث" 
                 const waitingMsg = document.getElementById('waitingMsg');
                 if (waitingMsg) {
                     waitingMsg.style.display = 'none'; 
                 }
-
-                // كتابة رسالة نجاح الاتصال جوه الشات
                 chatArea.innerHTML += `
                     <div class="system-msg" style="text-align: center; color: #4CAF50; font-weight: bold; margin-bottom: 15px;">
                         تم الاتصال بالوسيط ${chatData.mediatorName} بنجاح ✔️
                     </div>
                 `;
-                // تفعيل حقل الإدخال وزرار الإرسال بعد دخول الوسيط
 msgInput.disabled = false;
 sendMsgBtn.disabled = false;
-msgInput.placeholder = "اكتب رسالتك هنا...";
-                
-                // إظهار زر الدفع للمشتري
+msgInput.placeholder = "اكتب رسالتك هنا...";               
                 const payBtn = document.getElementById('payBtn');
                 if (payBtn) payBtn.style.display = 'block';
-
-                // التمرير التلقائي لأسفل الشات عشان يشوف الرسالة الجديدة
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
         });
-
     } catch (error) {
-        console.error("خطأ في إنشاء المحادثة:", error);
-        
-        // عرض الخطأ داخل الشات لو حصلت مشكلة
+        console.error("خطأ في إنشاء المحادثة:", error); 
         chatArea.innerHTML += `
             <div class="system-msg" style="text-align: center; color: #f44336; font-weight: bold; margin-bottom: 15px;">
                 ❌ حصلت مشكلة في الاتصال بالسيرفر، تأكد من اتصالك بالإنترنت وجرب تاني.
@@ -498,7 +488,6 @@ msgInput.placeholder = "اكتب رسالتك هنا...";
         `;
     }
 });
-
   closeChat.addEventListener('click', () => {
     chatInterface.style.display = 'none';
   });
@@ -539,11 +528,9 @@ if (payBtn) {
         </div>
         `;
         chatArea.scrollTop = chatArea.scrollHeight;
-
 if (currentSelectedPack) {
     // 1. عرف المتغير أولاً
     const packId = currentSelectedPack.getAttribute('data-id');
-
     // 2. ابدأ الـ try عشان تنفذ الأوامر
     try {
         // 3. استخدم المتغير في الحذف بعد ما اتعرف
