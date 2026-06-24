@@ -227,113 +227,232 @@ align-self: center;
 background: #007bff;
 color: #ffffff;
 }
-@media (max-width: 480px) {
-    .games-wrapper {
-        transform: scale(0.8);
+/* =========================================
+   تعديلات شاشات التابلت (أصغر من 1024px)
+   ========================================= */
+@media (max-width: 1023px) {
+    .heder { 
+        margin: 0 1rem; 
+    }
+    
+    .hero { 
+        flex-direction: column; 
+        text-align: center; 
+        gap: 2rem; 
+    }
+    
+    .heroImg { 
+        width: 100%; 
+        max-width: 400px; 
+    }
+    
+    .name, .title { 
+        font-size: 2rem; 
+    }
+    
+    .arrow { 
+        display: none; 
+    }
+
+    .aboutMe { 
+        flex-direction: column-reverse; 
+        align-items: center;
+        text-align: center; 
+        gap: 2rem; 
+        padding: 3rem 1rem; 
+    }
+    
+    .textcontainer { 
+        position: static; 
+        margin-top: 1rem; 
+        align-items: center; 
+    }
+    
+    .aboutName, .aboutTitle { 
+        font-size: 1.5rem; 
+        position: static; 
+    }
+    
+    .aboutMeImg { 
+        position: static; 
+        width: 100%; 
+        max-width: 300px; 
+        height: auto; 
+    }
+
+    .worksContainer { 
+        padding: 3rem 1rem; 
+        gap: 2rem; 
+    }
+    
+    .works ul { 
+        flex-direction: column; 
+        gap: 1rem; 
+    }
+    
+    .contactContainer { 
+        margin: 5rem 1rem; 
+        gap: 2rem; 
+        padding: 2rem 1rem; 
+    }
+    
+    .contacts { 
+        flex-direction: column; 
+    }
+
+    #gamesPage { 
+        flex-direction: column; 
+        padding: 2rem 1rem; 
     }
 }
-@media (max-width: 1023px) {
-.heder {
-margin-left: 1rem;
-margin-right: 1rem;
+
+/* =========================================
+   تعديلات شاشات الموبايل (أصغر من 768px)
+   ========================================= */
+@media (max-width: 768px) {
+    .name, .title { 
+        font-size: 1.5rem; 
+    }
+    
+    .aboutName, .aboutTitle { 
+        font-size: 1.2rem; 
+    }
+    
+    /* جعل أزرار التنقل (الناف بار) تنزل لسطر جديد عشان متخرجش برا الشاشة */
+    .navigation ul {
+        flex-wrap: wrap; 
+        padding: 10px;
+        border-radius: 20px;
+        gap: 10px;
+    }
+    
+    .navigation ul li a {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+
+    /* تصغير حجم كروت الألعاب للموبايل */
+    .games-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        padding: 0 10px;
+    }
+
+    /* تصغير أزرار الدعم العائمة عشان متاخدش مساحة كبيرة من شاشة الموبايل */
+    .floating-support-btn, .mediator-call-btn {
+        width: 45px;
+        height: 45px;
+        bottom: 15px;
+        right: 15px;
+        font-size: 14px;
+    }
 }
-#gamesPage {
-    background-color: #ffffff;
-    min-height: 80vh;
-    padding: 2rem;
-    text-align: center;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1.5rem;
-}
-.hero {
-flex-direction: column;
-text-align: center;
-gap: 2rem;
-}
-.heroImg {
-width: 100%;
-max-width: 400px;
-}
-.name, .title {
-font-size: 2rem;
-}
-.arrow {
-display: none;
-}
-.aboutMe {
-display: flex;
-flex-direction: column-reverse;
-align-items: center;
-gap: 2rem;
-}
-.textcontainer {
-position: static;
-display: flex;
-flex-direction: column;
-align-items: center;
-text-align: center;
-margin-top: 0rem 1rem;
-gap: 1rem;
-}
-.aboutName, .aboutTitle {
-font-size: 1.5rem;
-position: static;
-margin: 0;
-}
-.main-logo {
-width: 150px;
-max-width: 150px;
-height: auto;
-flex-shrink: 0;
-}
-.light {
-width: 60px;
-}
-.aboutMeImg {
-position: static;
-width: 100%;
-max-width: 300px;
-height: auto;
-}
-.works {
-padding: 0;
-}
-.worksContainer {
-padding: 5rem 0rem;
-gap: 3rem;
-}
-.projectTitle {
-margin-left: 1rem;
-}
-.works ul {
-flex-direction: column;
-gap: 1rem;
-}
-.contactContainer {
-margin: 10rem 5rem;
-gap: 2rem;
-}
-.contacts {
-flex-direction: column;
-}
-}
-#mainContent {
-    display: block;
-}
-#gamesContent {
-    display: none;
-}
-#gamesPage {
-   flex-direction: column;
-   align-items: center;
-   justify-content: center;
-   text-align: center;
-   width: 100%;
-   min-height: 70vh;
-   gap: 20px;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .navigation ul {
 display: flex;
 justify-content: center;
