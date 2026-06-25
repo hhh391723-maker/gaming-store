@@ -595,7 +595,7 @@ async function openMediatorChat() {
 
         // 3. لو لقى مشتري (ربط الوسيط بالمشتري)
         const chatDoc = waitingChats.docs[0];
-        window.currentChatId = chatDoc.id; // خلي المتغير global زي ما كنت عامله
+    currentChatId = chatDoc.id; // خلي المتغير global زي ما كنت عامله
 
         await db.collection('active_chats').doc(currentChatId).update({
             status: 'active',
