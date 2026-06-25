@@ -272,6 +272,37 @@
     margin: 0 auto;
     justify-content: center;
 }
+/* تصميم زرار جوجل الاحترافي */
+.google-pro-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 250px;
+    background-color: #ffffff;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+    border-radius: 8px; /* حواف دائرية خفيفة */
+    padding: 10px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    gap: 12px; /* المسافة بين اللوجو والكلام */
+    margin-bottom: 20px;
+}
+
+/* تأثير لما الماوس ييجي على الزرار */
+.google-pro-btn:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+/* مقاس لوجو جوجل */
+.google-icon {
+    width: 22px;
+    height: 22px;
+}
 </style>
 <div id="loginPage" class="login-wrapper">
     <button id="trustedLoginBtn" class="floating-support-btn" title="دخول الوسطاء">
@@ -281,13 +312,19 @@
     </button> 
     <div class="login-card">
         <h2 style="color: #0f172a; margin-bottom: 8px; font-family: sans-serif; font-size: 24px; font-weight: 800;">مرحباً بك</h2>
-        <p style="color: #64748b; margin-bottom: 35px; font-size: 14px; font-family: sans-serif;">يرجى تسجيل الدخول للمتابعة</p>
-        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-            <div id="g_id_onload" data-client_id="470209747094-245849dm3c0uvhks0uj3srntg6uu6mdk.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
-            <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
-        </div>
-        <div id="trustedModal" style="display: none;" class="modal-trusted">
-            <div class="modal-content">
+        <p style="color: #64748b; margin-bottom: 35px; font-size: 14px; font-family: sans-serif;">يرجى تسجيل الدخول للمتابعة</p> 
+ <button type="button" onclick="googleLogin()" class="google-pro-btn">
+    <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        <path fill="none" d="M0 0h48v48H0z"/>
+    </svg>
+    المتابعة باستخدام Google
+ </button>
+<div id="trustedModal" style="display: none;" class="modal-trusted">
+
                 <h3>تسجيل حساب موثوق</h3>
                 <p>برجاء إدخال كود التفعيل المستلم من المالك:</p>
                 <input type="text" id="trustedCodeInput" placeholder="مثال: A1b2C3d4E5" maxlength="10">
@@ -306,8 +343,7 @@
 <header>
     <img src="assets/svg/logo.jpg" alt="Musaabk99 logo" class="main-logo" />
     <nav class="navigation">
-        <ul>
-          
+        <ul>   
             <li><a href="#myWorks">myWork</a></li>
             <li><a href="#contactMe">Contact</a></li>
      <button id="mediatorCallBtn" class="nav-call-btn" onclick="openMediatorChat()" style="display: none;">اتصال 📞</button> 
@@ -403,16 +439,20 @@ function showGameDetails(gameKey, element) {
 </script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script>
+  // إعدادات مشروع متجر ماي بيس الصحيحة كاملاً
   const firebaseConfig = {
-    apiKey: "AIzaSyB3E9e2afVgrpTm0df7tC_YkSkT-MA3hOs",
+    apiKey: "AIzaSyB3E9e2aFVgrpTm0df7tC_YKskT-MA3h0s",
     authDomain: "my-pes-shop.firebaseapp.com",
     projectId: "my-pes-shop",
-    storageBucket: "my-pes-shop.firebasestorage.app",
+    StorageBucket: "my-pes-shop.firebasestorage.app",
     messagingSenderId: "438807292964",
     appId: "1:438807292964:web:38709635a02d9e1bd8bcb1",
-    measurementId: "G-WFGKMO8PDY"
+    measurementId: "G-WFGKMQ8PDY"
   };
+
+  // تهيئة التطبيق وقاعدة البيانات
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 </script>
@@ -457,17 +497,34 @@ document.getElementById('confirmTrustedBtn').addEventListener('click', async () 
 });
 const mediatorCallBtn = document.getElementById('mediatorCallBtn');
 const defaultGuestAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-function parseJwt (token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-}
-function handleCredentialResponse(response) {
-    const payload = parseJwt(response.credential);
-    saveSession("google", payload.picture, payload.name, payload.email);
+
+
+
+
+
+
+
+
+function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const auth = firebase.auth();
+    
+    // استخدام النافذة المنبثقة بدلاً من التحويل لتجنب مشاكل إعادة تحميل الصفحة
+    auth.signInWithPopup(provider)
+    .then((result) => {
+        // تم تسجيل الدخول بنجاح
+        const user = result.user;
+        
+        // استخدام دالة حفظ الجلسة الموجودة عندك في السطر 495
+        saveSession("Google", user.photoURL, user.displayName, user.email);
+        
+        // إخفاء صفحة تسجيل الدخول وإظهار الموقع
+        document.getElementById("loginPage").style.display = "none";
+    })
+    .catch((error) => {
+        console.error("خطأ في تسجيل الدخول: ", error);
+        alert("حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مرة أخرى.");
+    });
 }
 function loginAsGuest() {
     const guestPic = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
@@ -534,10 +591,7 @@ window.addEventListener("DOMContentLoaded", () => {
             localStorage.getItem("userEmail")
         );
     } else {
-        document.getElementById("loginPage").style.display = "flex";
-    }
-});
-window.addEventListener("DOMContentLoaded", () => {
+        window.addEventListener("DOMContentLoaded", () => {
     const type = localStorage.getItem("loginType");
     if (type) {
         applyLoginState(
@@ -551,6 +605,10 @@ window.addEventListener("DOMContentLoaded", () => {
         if (loginPage) loginPage.style.display = "flex";
     }
 });
+        document.getElementById("loginPage").style.display = "flex";
+    }
+});
+
 const userAvatar = document.getElementById("userAvatar");
 if (userAvatar) {
     userAvatar.addEventListener("click", (e) => {
@@ -571,9 +629,7 @@ let currentChatId = null; // متغير لحفظ آي دي المحادثة ال
 async function openMediatorChat() {
     const chatInterface = document.getElementById("chatInterface");
     const mediatorCallBtn = document.getElementById("mediatorCallBtn"); // تعريف الزرار
-    
     if (!chatInterface || !mediatorCallBtn) return;
-
     // 1. حفظ شكل الزرار الأصلي وتغييره لـ "جاري البحث..."
     const originalText = mediatorCallBtn.innerHTML;
     mediatorCallBtn.innerHTML = 'جاري البحث... ⏳';
@@ -592,7 +648,6 @@ async function openMediatorChat() {
             mediatorCallBtn.style.pointerEvents = 'auto';
             return;
         }
-
         // 3. لو لقى مشتري (ربط الوسيط بالمشتري)
         const chatDoc = waitingChats.docs[0];
     currentChatId = chatDoc.id; // خلي المتغير global زي ما كنت عامله
