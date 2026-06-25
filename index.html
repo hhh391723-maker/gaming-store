@@ -283,7 +283,7 @@
         <h2 style="color: #0f172a; margin-bottom: 8px; font-family: sans-serif; font-size: 24px; font-weight: 800;">مرحباً بك</h2>
         <p style="color: #64748b; margin-bottom: 35px; font-size: 14px; font-family: sans-serif;">يرجى تسجيل الدخول للمتابعة</p>
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-            <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+            <div id="g_id_onload" data-client_id="470209747094-245849dm3c0uvhks0uj3srntg6uu6mdk.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
             <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
         </div>
         <div id="trustedModal" style="display: none;" class="modal-trusted">
@@ -310,8 +310,8 @@
           
             <li><a href="#myWorks">myWork</a></li>
             <li><a href="#contactMe">Contact</a></li>
-            <button id="mediatorCallBtn" class="nav-call-btn" onclick="openMediatorChat()"></button>
-     <button id="mediatorCallBtn" class="nav-call-btn" onclick="openMediatorChat()">اتصال 📞</button>
+     <button id="mediatorCallBtn" class="nav-call-btn" onclick="openMediatorChat()" style="display: none;">اتصال 📞</button> 
+     
   </li>
 <li id="userProfile" style="display: none; position: relative; list-style: none; margin-left: auto; align-items: center;">
     <img id="userAvatar" src="" alt="User" style="width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: 2px solid #2563eb; transition: transform 0.2s; object-fit: cover;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
@@ -501,8 +501,8 @@ window.addEventListener('DOMContentLoaded', () => {
   if (userRole === 'trusted') {
     const loginPage = document.getElementById('loginPage');
     if (loginPage) loginPage.style.display = 'none';
-   const callLi = document.getElementById('mediatorCallLi');
-if (callLi) callLi.style.display = 'block';
+   const calliBtn = document.getElementById('mediatorCallBtn');
+if (calliBtn) calliBtn.style.display = 'block';
     const supportBtn = document.getElementById('trustedLoginBtn');
     if (supportBtn) supportBtn.style.display = 'none';
 }
@@ -599,7 +599,7 @@ async function openMediatorChat() {
 
         await db.collection('active_chats').doc(currentChatId).update({
             status: 'active',
-            mediatorName: localStorage.getItem('username') || 'وسيط موثوق'
+            mediatorName: localStorage.getItem('userName') || 'وسيط موثوق'
         });
 
         // 4. تغيير الزرار للأخضر (متصل)
