@@ -465,6 +465,19 @@ currentChatId = newChatRef.id;
                 const waitingMsg = document.getElementById('waitingMsg');
                 if (waitingMsg) {
                     waitingMsg.style.display = 'none'; 
+                    // الاستماع للرسائل في هذه المحادثة
+db.collection('active_chats').doc(currentChatId).collection('messages').orderBy('timestamp')
+    .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+                const msg = change.doc.data();
+                // لو المشتري هو اللي باعت لونها أزرق (user)، لو الوسيط لونها رمادي (bot)
+                const msgClass = msg.sender === 'buyer' ? 'msg user' : 'msg bot';
+                chatArea.innerHTML += `<div class="${msgClass}">${msg.text}</div>`;
+                chatArea.scrollTop = chatArea.scrollHeight; // النزول لأسفل الشات تلقائياً
+            }
+        });
+    });
                 }
                 chatArea.innerHTML += `
                     <div class="system-msg" style="text-align: center; color: #4CAF50; font-weight: bold; margin-bottom: 15px;">
@@ -496,14 +509,19 @@ msgInput.placeholder = "اكتب رسالتك هنا...";
   msgInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') sendMessage();
   });
-
   function sendMessage() {
     const text = msgInput.value.trim();
-    if (!text) return;
-    chatArea.innerHTML += `<div class="msg user">${text}</div>`;
-    msgInput.value = '';
-    chatArea.scrollTop = chatArea.scrollHeight;
-  }
+    if (!text || !currentChatId) return; // التأكد إن فيه رسالة وفيه محادثة شغالة
+
+    // إرسال الرسالة لقاعدة البيانات
+    db.collection('active_chats').doc(currentChatId).collection('messages').add({
+        text: text,
+        sender: 'buyer', // عشان نعرف إن دي رسالة المشتري
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    msgInput.value = ''; // تفريغ مربع الإدخال
+}
   function botReply(fullText) {
     const msgId = 'bot-' + Date.now();
     chatArea.innerHTML += `<div class="msg bot" id="${msgId}"></div>`;

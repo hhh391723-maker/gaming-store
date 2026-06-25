@@ -310,10 +310,8 @@
           
             <li><a href="#myWorks">myWork</a></li>
             <li><a href="#contactMe">Contact</a></li>
-            <li id="mediatorCallLi" style="display: none; margin-right: 15px;">
-      <button id="mediatorCallBtn" class="nav-call-btn">
-          اتصال 📞
-      </button>
+            <button id="mediatorCallBtn" class="nav-call-btn" onclick="openMediatorChat()"></button>
+     <button id="mediatorCallBtn" class="nav-call-btn" onclick="openMediatorChat()">اتصال 📞</button>
   </li>
 <li id="userProfile" style="display: none; position: relative; list-style: none; margin-left: auto; align-items: center;">
     <img id="userAvatar" src="" alt="User" style="width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: 2px solid #2563eb; transition: transform 0.2s; object-fit: cover;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
@@ -458,53 +456,6 @@ document.getElementById('confirmTrustedBtn').addEventListener('click', async () 
     }
 });
 const mediatorCallBtn = document.getElementById('mediatorCallBtn');
-
-if (mediatorCallBtn) {
-    mediatorCallBtn.addEventListener('click', async () => {
-        const originalText = mediatorCallBtn.innerHTML;
-        mediatorCallBtn.innerHTML = 'جاري البحث...';
-        mediatorCallBtn.style.pointerEvents = 'none'; 
-        try {
-            const waitingChatsRef = db.collection('active_chats')
-                                      .where('status', '==', 'waiting')
-                                      .limit(1); 
-            const snapshot = await waitingChatsRef.get();
-            if (snapshot.empty) {
-                alert('مفيش طلبات شراء في الانتظار حالياً.');
-                mediatorCallBtn.innerHTML = originalText;
-                mediatorCallBtn.style.pointerEvents = 'auto';
-                return;
-            }
-            const chatDoc = snapshot.docs[0];
-            await db.collection('active_chats').doc(chatDoc.id).update({
-                status: 'active',
-                mediatorName: localStorage.getItem('username') || 'وسيط موثوق'
-            });
-            mediatorCallBtn.innerHTML = 'متصل ✔️';
-            mediatorCallBtn.style.backgroundColor = '#27ae60';
-            console.log("تم استلام الطلب وفتح الشات للمشتري");
-            // فتح واجهة الشات للوسيط
-const chatInterface = document.getElementById('chatInterface');
-if (chatInterface) {
-    chatInterface.style.display = 'flex';
-    
-    // حفظ ID المحادثة الحالي عشان دالة إرسال الرسايل تستخدمه
-    window.currentChatId = chatDoc.id; 
-    
-    // تفريغ الشات القديم (لو موجود) عشان يبدأ على نضافة
-    const chatArea = document.getElementById('chatArea');
-    if(chatArea) chatArea.innerHTML = '';
-    
-} else {
-    alert("تنبيه: واجهة الشات غير موجودة في هذا الملف!");
-}
-        } catch (error) {
-            console.error('خطأ:', error);
-            mediatorCallBtn.innerHTML = originalText;
-            mediatorCallBtn.style.pointerEvents = 'auto';
-        }
-    });
-}
 const defaultGuestAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 function parseJwt (token) {
     var base64Url = token.split('.')[1];
@@ -616,6 +567,72 @@ window.addEventListener("click", () => {
         dropdown.style.display = "none";
     }
 });
+let currentChatId = null; // متغير لحفظ آي دي المحادثة الحالية للوسيط
+async function openMediatorChat() {
+    const chatInterface = document.getElementById("chatInterface");
+    const mediatorCallBtn = document.getElementById("mediatorCallBtn"); // تعريف الزرار
+    
+    if (!chatInterface || !mediatorCallBtn) return;
+
+    // 1. حفظ شكل الزرار الأصلي وتغييره لـ "جاري البحث..."
+    const originalText = mediatorCallBtn.innerHTML;
+    mediatorCallBtn.innerHTML = 'جاري البحث... ⏳';
+    mediatorCallBtn.style.pointerEvents = 'none'; // منع الضغط عليه مرتين
+
+    try {
+        // 2. البحث عن مشتري في الانتظار
+        const waitingChats = await db.collection('active_chats').where('status', '==', 'waiting').limit(1).get();
+
+        if (waitingChats.empty) {
+            // لو ملقاش طلبات
+            alert("لا يوجد مشترين في الانتظار حالياً.");
+            
+            // إرجاع الزرار لشكله الأصلي
+            mediatorCallBtn.innerHTML = originalText;
+            mediatorCallBtn.style.pointerEvents = 'auto';
+            return;
+        }
+
+        // 3. لو لقى مشتري (ربط الوسيط بالمشتري)
+        const chatDoc = waitingChats.docs[0];
+        window.currentChatId = chatDoc.id; // خلي المتغير global زي ما كنت عامله
+
+        await db.collection('active_chats').doc(currentChatId).update({
+            status: 'active',
+            mediatorName: localStorage.getItem('username') || 'وسيط موثوق'
+        });
+
+        // 4. تغيير الزرار للأخضر (متصل)
+        mediatorCallBtn.innerHTML = 'متصل ✔️';
+        mediatorCallBtn.style.backgroundColor = '#27ae60';
+        console.log("تم استلام الطلب وفتح الشات للمشتري");
+
+        // 5. إظهار واجهة الشات للوسيط
+        chatInterface.style.display = "flex";
+        const chatArea = document.getElementById('chatArea');
+        if (chatArea) chatArea.innerHTML = ''; // تنظيف الشات القديم
+
+        // 6. الاستماع للرسائل (نفس الكود بتاعك)
+        db.collection('active_chats').doc(currentChatId).collection('messages').orderBy('timestamp')
+          .onSnapshot(snapshot => {
+              snapshot.docChanges().forEach(change => {
+                  if (change.type === 'added') {
+                      const msg = change.doc.data();
+                      const msgClass = msg.sender === 'mediator' ? 'msg user' : 'msg bot';
+                      chatArea.innerHTML += `<div class="${msgClass}">${msg.text}</div>`;
+                      chatArea.scrollTop = chatArea.scrollHeight;
+                  }
+              });
+          });
+
+    } catch (error) {
+        console.error("حدث خطأ أثناء الاتصال بالمشتري:", error);
+        alert("حدث خطأ، يرجى المحاولة مرة أخرى.");
+        // إرجاع الزرار لشكله الأصلي لو حصل خطأ
+        mediatorCallBtn.innerHTML = originalText;
+        mediatorCallBtn.style.pointerEvents = 'auto';
+    }
+}
 </script>
 <div class="chat-overlay" id="chatInterface">
   <div class="chat-header">

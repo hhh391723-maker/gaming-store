@@ -306,9 +306,6 @@ color: #ffffff;
     }
 }
 
-/* =========================================
-   تعديلات شاشات الموبايل (أصغر من 768px)
-   ========================================= */
 @media (max-width: 768px) {
     .name, .title { 
         font-size: 1.5rem; 
@@ -317,8 +314,6 @@ color: #ffffff;
     .aboutName, .aboutTitle { 
         font-size: 1.2rem; 
     }
-    
-    /* جعل أزرار التنقل (الناف بار) تنزل لسطر جديد عشان متخرجش برا الشاشة */
     .navigation ul {
         flex-wrap: wrap; 
         padding: 10px;
@@ -347,112 +342,6 @@ color: #ffffff;
         font-size: 14px;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .navigation ul {
 display: flex;
 justify-content: center;
