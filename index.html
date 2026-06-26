@@ -324,7 +324,6 @@
     المتابعة باستخدام Google
  </button>
 <div id="trustedModal" style="display: none;" class="modal-trusted">
-
                 <h3>تسجيل حساب موثوق</h3>
                 <p>برجاء إدخال كود التفعيل المستلم من المالك:</p>
                 <input type="text" id="trustedCodeInput" placeholder="مثال: A1b2C3d4E5" maxlength="10">
@@ -497,14 +496,6 @@ document.getElementById('confirmTrustedBtn').addEventListener('click', async () 
 });
 const mediatorCallBtn = document.getElementById('mediatorCallBtn');
 const defaultGuestAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-
-
-
-
-
-
-
 function googleLogin() {
     const provider = new firebase.auth.GoogleAuthProvider();
     const auth = firebase.auth();
