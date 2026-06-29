@@ -417,18 +417,13 @@ if (dynamicContainer) {
 }
  const hideModal = async () => {
     modal.style.display = 'none';
-    
-    // التأكد إن في حساب تم اختياره
     if (currentSelectedPack) {
         const packId = currentSelectedPack.getAttribute('data-id');
         try {
-            // البحث عن الطلب المعلق الخاص بهذا الحساب
             const chatQuery = await db.collection('active_chats')
                 .where('packId', '==', packId)
                 .where('status', '==', 'waiting')
                 .get();
-
-            // مسح الطلب من الداتابيز
             chatQuery.forEach(async (doc) => {
                 await db.collection('active_chats').doc(doc.id).delete();
             });
@@ -641,9 +636,11 @@ if (closeChatBtn) {
         }
     });
 }
+
 function endMediatorChat(chatId) {
+
     // 1. نمسح المحادثة من الفايربيز عشان الحساب يرجع متاح
-    db.collection('chats').doc(chatId).delete().then(() => {
+    db.collection('active_chats').doc(chatId).delete().then(() => {
         
         // 2. تنبيه وتحديث الواجهة بعد الحذف الناجح
         alert('المشتري ألغى الطلب أو غادر المحادثة');

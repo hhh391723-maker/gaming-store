@@ -281,24 +281,20 @@
     background-color: #ffffff;
     color: #3c4043;
     border: 1px solid #dadce0;
-    border-radius: 8px; /* حواف دائرية خفيفة */
+    border-radius: 8px; 
     padding: 10px 16px;
     font-size: 16px;
     font-weight: bold;
     font-family: sans-serif;
     cursor: pointer;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    gap: 12px; /* المسافة بين اللوجو والكلام */
+    gap: 12px; 
     margin-bottom: 20px;
 }
-
-/* تأثير لما الماوس ييجي على الزرار */
 .google-pro-btn:hover {
     background-color: #f8f9fa;
     box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
 }
-
-/* مقاس لوجو جوجل */
 .google-icon {
     width: 22px;
     height: 22px;
@@ -440,7 +436,6 @@ function showGameDetails(gameKey, element) {
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script>
-  // إعدادات مشروع متجر ماي بيس الصحيحة كاملاً
   const firebaseConfig = {
     apiKey: "AIzaSyB3E9e2aFVgrpTm0df7tC_YKskT-MA3h0s",
     authDomain: "my-pes-shop.firebaseapp.com",
@@ -450,7 +445,6 @@ function showGameDetails(gameKey, element) {
     appId: "1:438807292964:web:38709635a02d9e1bd8bcb1",
     measurementId: "G-WFGKMQ8PDY"
   };
-
   // تهيئة التطبيق وقاعدة البيانات
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
@@ -625,7 +619,6 @@ async function openMediatorChat() {
     const originalText = mediatorCallBtn.innerHTML;
     mediatorCallBtn.innerHTML = 'جاري البحث... ⏳';
     mediatorCallBtn.style.pointerEvents = 'none'; // منع الضغط عليه مرتين
-
     try {
         // 2. البحث عن مشتري في الانتظار
         const waitingChats = await db.collection('active_chats').where('status', '==', 'waiting').limit(1).get();
@@ -647,6 +640,39 @@ async function openMediatorChat() {
             status: 'active',
             mediatorName: localStorage.getItem('userName') || 'وسيط موثوق'
         });
+        const msgInput = document.getElementById('msgInput');
+const sendMsgBtn = document.getElementById('sendMsgBtn');
+
+// دالة إرسال الرسالة من طرف الوسيط
+async function sendMediatorMessage() {
+    const text = msgInput.value.trim();
+    if (!text || !currentChatId) return;
+
+    try {
+        // إضافة الرسالة في مسار المحادثة الحالية
+        await db.collection('active_chats').doc(currentChatId).collection('messages').add({
+            text: text,
+            sender: 'mediator', // تمييز إن المرسل هو الوسيط
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        msgInput.value = ''; // تفريغ مربع النص بعد الإرسال
+    } catch (error) {
+        console.error("خطأ في إرسال الرسالة: ", error);
+    }
+}
+
+// تشغيل الدالة لما الوسيط يدوس على زرار الإرسال
+if(sendMsgBtn) {
+    sendMsgBtn.addEventListener('click', sendMediatorMessage);
+}
+
+// تشغيل الدالة لما الوسيط يدوس Enter من الكيبورد
+if(msgInput) {
+    msgInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendMediatorMessage();
+    });
+}
 
         // 4. تغيير الزرار للأخضر (متصل)
         mediatorCallBtn.innerHTML = 'متصل ✔️';
@@ -679,6 +705,73 @@ async function openMediatorChat() {
         mediatorCallBtn.style.pointerEvents = 'auto';
     }
 }
+// === 1. كود إرسال الرسائل للوسيط ===
+const msgInput = document.getElementById('msgInput');
+const sendMsgBtn = document.getElementById('sendMsgBtn');
+
+async function sendMediatorMessage() {
+    const text = msgInput.value.trim();
+    if (!text || !currentChatId) return;
+
+    try {
+        await db.collection('active_chats').doc(currentChatId).collection('messages').add({
+            text: text,
+            sender: 'mediator',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        msgInput.value = '';
+    } catch (error) {
+        console.error("خطأ في إرسال الرسالة: ", error);
+    }
+}
+
+if(sendMsgBtn) {
+    sendMsgBtn.addEventListener('click', sendMediatorMessage);
+}
+
+if(msgInput) {
+    msgInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendMediatorMessage();
+    });
+}
+
+// === 2. كود زر إنقاذ الوسيط (إلغاء الطلب) ===
+const cancelOrderBtn = document.getElementById('cancelOrderBtn');
+
+if (cancelOrderBtn) {
+    cancelOrderBtn.addEventListener('click', async () => {
+        try {
+            if (typeof currentChatId !== 'undefined' && currentChatId) {
+                const isConfirmed = confirm("هل أنت متأكد من إلغاء هذا الطلب؟ سيعود الحساب متاحاً لوسيط آخر.");
+                if (!isConfirmed) return;
+
+                // حذف المستند من الكولكشن الصحيح
+                await db.collection('active_chats').doc(currentChatId).delete();
+                console.log("تم إلغاء الطلب بنجاح");
+                alert('تم إلغاء الطلب وإرجاع الحساب متاح');
+
+                // إعادة تعيين الشاشة والرجوع للوحة التحكم
+                currentChatId = null;
+                const chatArea = document.getElementById('chatArea');
+                if (chatArea) chatArea.innerHTML = '';
+                
+                document.getElementById('chat-box').style.display = 'none';
+                document.getElementById('trusted-dashboard').style.display = 'block';
+                
+                // البحث عن عميل جديد في الطابور تلقائياً
+                if (typeof connectAsTrusted === 'function') {
+                    connectAsTrusted();
+                }
+            } else {
+                alert('لا توجد محادثة نشطة لإلغائها');
+            }
+        } catch (error) {
+            console.error("حدث خطأ أثناء إلغاء الطلب: ", error);
+            alert('حدث خطأ، يرجى المحاولة مرة أخرى');
+        }
+    });
+}
 </script>
 <div class="chat-overlay" id="chatInterface">
   <div class="chat-header">
@@ -688,6 +781,7 @@ async function openMediatorChat() {
     <button id="payBtn" class="pay-btn" style="display: none;">التقدم للدفع</button>
   </div>
   <button class="close-chat-btn" id="closeChat">رجوع للمتجر</button>
+  <button class="cancel-order-btn" id="cancelOrderBtn" style="background-color: #dc3545; color: white;">إلغاء الطلب</button>
 </div>
   </div>
   <div class="chat-area" id="chatArea">
