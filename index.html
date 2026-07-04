@@ -272,7 +272,6 @@
     margin: 0 auto;
     justify-content: center;
 }
-/* تصميم زرار جوجل الاحترافي */
 .google-pro-btn {
     display: flex;
     align-items: center;
@@ -346,7 +345,7 @@
   </li>
 <li id="userProfile" style="display: none; position: relative; list-style: none; margin-left: auto; align-items: center;">
     <img id="userAvatar" src="" alt="User" style="width: 42px; height: 42px; border-radius: 50%; cursor: pointer; border: 2px solid #2563eb; transition: transform 0.2s; object-fit: cover;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-    
+
     <div id="logoutDropdown" class="modern-dropdown" dir="rtl">
         <div style="padding: 16px 20px; background: #f8fafc;">
             <strong id="dropName" style="display: block; color: #0f172a; font-size: 15px; margin-bottom: 4px; font-family: sans-serif;">...</strong>
@@ -389,7 +388,6 @@
                     <img src="assets/imgs/fortnite.png" alt="Fortnite">
                 </div>
             </div>
-
             <div class="interactive-game-card details-card">
                 <div class="game-info-box" style="flex-direction: column; text-align: center; width: 100%;">
                     <h2 id="display-title">Free Fire</h2>
@@ -472,21 +470,21 @@ document.getElementById('confirmTrustedBtn').addEventListener('click', async () 
             alert('الكود غير صحيح، أو تم استخدامه من قبل!');
             return;
         }
-        querySnapshot.forEach(async (doc) => {
-            await db.collection('trusted_codes').doc(doc.id).update({
-                used: true
-            });
+for (const doc of querySnapshot.docs) {
+    await db.collection('trusted_codes').doc(doc.id).update({
+        used: true
+    });
+}
             localStorage.setItem('userRole', 'trusted');
             localStorage.setItem('loginType', 'trusted');
             localStorage.setItem('userName', 'وسيط موثوق');
             localStorage.setItem('userPicture', 'https://cdn-icons-png.flaticon.com/512/149/149071.png');
             alert('تم تفعيل حساب التراستيد بنجاح! 🎉');
             window.location.reload();
-        });
     } catch (error) {
         console.error('خطأ في السيرفر أثناء التحقق: ', error);
         alert('حدث خطأ ما، يرجى المحاولة مرة أخرى.');
-    }
+}
 });
 const mediatorCallBtn = document.getElementById('mediatorCallBtn');
 const defaultGuestAvatar = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -593,7 +591,6 @@ window.addEventListener("DOMContentLoaded", () => {
         document.getElementById("loginPage").style.display = "flex";
     }
 });
-
 const userAvatar = document.getElementById("userAvatar");
 if (userAvatar) {
     userAvatar.addEventListener("click", (e) => {
@@ -610,6 +607,7 @@ window.addEventListener("click", () => {
         dropdown.style.display = "none";
     }
 });
+let unsubscribeChat = null;
 let currentChatId = null; // متغير لحفظ آي دي المحادثة الحالية للوسيط
 async function openMediatorChat() {
     const chatInterface = document.getElementById("chatInterface");
@@ -642,7 +640,6 @@ async function openMediatorChat() {
         });
         const msgInput = document.getElementById('msgInput');
 const sendMsgBtn = document.getElementById('sendMsgBtn');
-
 // دالة إرسال الرسالة من طرف الوسيط
 async function sendMediatorMessage() {
     const text = msgInput.value.trim();
@@ -661,7 +658,6 @@ async function sendMediatorMessage() {
         console.error("خطأ في إرسال الرسالة: ", error);
     }
 }
-
 // تشغيل الدالة لما الوسيط يدوس على زرار الإرسال
 if(sendMsgBtn) {
     sendMsgBtn.addEventListener('click', sendMediatorMessage);
@@ -673,7 +669,6 @@ if(msgInput) {
         if (e.key === 'Enter') sendMediatorMessage();
     });
 }
-
         // 4. تغيير الزرار للأخضر (متصل)
         mediatorCallBtn.innerHTML = 'متصل ✔️';
         mediatorCallBtn.style.backgroundColor = '#27ae60';
@@ -684,18 +679,24 @@ if(msgInput) {
         const chatArea = document.getElementById('chatArea');
         if (chatArea) chatArea.innerHTML = ''; // تنظيف الشات القديم
 
-        // 6. الاستماع للرسائل (نفس الكود بتاعك)
-        db.collection('active_chats').doc(currentChatId).collection('messages').orderBy('timestamp')
-          .onSnapshot(snapshot => {
-              snapshot.docChanges().forEach(change => {
-                  if (change.type === 'added') {
-                      const msg = change.doc.data();
-                      const msgClass = msg.sender === 'mediator' ? 'msg user' : 'msg bot';
-                      chatArea.innerHTML += `<div class="${msgClass}">${msg.text}</div>`;
-                      chatArea.scrollTop = chatArea.scrollHeight;
-                  }
-              });
-          });
+ // 6. الاستماع للرسائل (نفس الكود بتاعك)
+        
+        // تنظيف الشات القديم لو كان موجود
+        if (unsubscribeChat) {
+            unsubscribeChat();
+        }
+        // الاستماع للرسائل الجديدة وحفظ الاتصال في المتغير
+        unsubscribeChat = db.collection('active_chats').doc(currentChatId).collection('messages').orderBy('timestamp')
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const msg = change.doc.data();
+                        const msgClass = msg.sender === 'mediator' ? 'msg user' : 'msg bot';
+                        chatArea.innerHTML += `<div class="${msgClass}">${msg.text}</div>`;
+                        chatArea.scrollTop = chatArea.scrollHeight;
+                    }
+                });
+            });
 
     } catch (error) {
         console.error("حدث خطأ أثناء الاتصال بالمشتري:", error);
@@ -735,7 +736,6 @@ if(msgInput) {
         if (e.key === 'Enter') sendMediatorMessage();
     });
 }
-
 // === 2. كود زر إنقاذ الوسيط (إلغاء الطلب) ===
 const cancelOrderBtn = document.getElementById('cancelOrderBtn');
 
@@ -750,16 +750,12 @@ if (cancelOrderBtn) {
                 await db.collection('active_chats').doc(currentChatId).delete();
                 console.log("تم إلغاء الطلب بنجاح");
                 alert('تم إلغاء الطلب وإرجاع الحساب متاح');
-
-                // إعادة تعيين الشاشة والرجوع للوحة التحكم
                 currentChatId = null;
                 const chatArea = document.getElementById('chatArea');
                 if (chatArea) chatArea.innerHTML = '';
                 
                 document.getElementById('chat-box').style.display = 'none';
                 document.getElementById('trusted-dashboard').style.display = 'block';
-                
-                // البحث عن عميل جديد في الطابور تلقائياً
                 if (typeof connectAsTrusted === 'function') {
                     connectAsTrusted();
                 }

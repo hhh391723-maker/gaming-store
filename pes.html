@@ -437,7 +437,7 @@ if (dynamicContainer) {
   cancelPurchase.addEventListener('click', hideModal);
 continuePurchase.addEventListener('click', async () => {
 
-    hideModal(); 
+modal.style.display = 'none';
 msgInput.disabled = true;
 sendMsgBtn.disabled = true;
 msgInput.placeholder = "انتظر دخول الوسيط لكتابة رسالتك...";
@@ -605,14 +605,10 @@ function loadPacks() {
       console.log("Error getting packs: ", error);
   });
 }
-
-// تشغيل الدالة أول ما الصفحة تفتح
 window.onload = () => {
     loadPacks();
 };
-// --- كود إغلاق الشات وإلغاء الطلب ---
 const closeChatBtn = document.getElementById('close-chat-btn');
-
 if (closeChatBtn) {
     closeChatBtn.addEventListener('click', async () => {
         // 1. إخفاء واجهة الشات أولاً
@@ -636,9 +632,7 @@ if (closeChatBtn) {
         }
     });
 }
-
 function endMediatorChat(chatId) {
-
     // 1. نمسح المحادثة من الفايربيز عشان الحساب يرجع متاح
     db.collection('active_chats').doc(chatId).delete().then(() => {
         
@@ -653,9 +647,7 @@ function endMediatorChat(chatId) {
     }).catch((error) => {
         console.error("حدث خطأ أثناء إنهاء المحادثة: ", error);
     });
-}
-        
-    
+}  
 window.addEventListener('beforeunload', () => {
     // لو المشتري كان فاتح محادثة وقفل الصفحة
     if (localStorage.getItem('pendingPurchase') === 'true' && typeof chatDocRef !== 'undefined') {
