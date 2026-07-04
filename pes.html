@@ -535,31 +535,44 @@ msgInput.placeholder = "اكتب رسالتك هنا...";
 if (payBtn) {
     payBtn.addEventListener('click', async () => {
         payBtn.style.display = 'none';
-        chatArea.innerHTML += `
-        <div class="msg" style="text-align: center; color: #4CAF50; font-weight: bold; margin: 15px auto; background: rgba(76, 175, 80, 0.15); padding: 10px 20px;">
-            تم الدفع بنجاح ✔
-        </div>
-        `;
-        chatArea.scrollTop = chatArea.scrollHeight;
-if (currentSelectedPack) {
-    // 1. عرف المتغير أولاً
-    const packId = currentSelectedPack.getAttribute('data-id');
-    // 2. ابدأ الـ try عشان تنفذ الأوامر
-    try {
-        // 3. استخدم المتغير في الحذف بعد ما اتعرف
-        await db.collection("pes_packs").doc(packId).delete();
         
-        // 4. امسح من الشاشة
-        currentSelectedPack.remove();
-        currentSelectedPack = null;
-        console.log("تم الحذف بنجاح من الداتابيز والشاشة");
-        
-    } catch (error) {
-        console.error("خطأ في حذف البيانات: ", error);
-    }
-}
-    });
-}
+        // 1. إرسال رسالة الدفع في الشات
+        if (currentChatId) {
+            try {
+                await db.collection('active_chats').doc(currentChatId).collection('messages').add({
+                    text: '<div style="text-align: center; color: #4CAF50; font-weight: bold; width: 100%;">✅ تم الدفع بنجاح</div>',
+                    sender: 'system',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // النزول لأسفل الشات تلقائياً
+                const chatArea = document.getElementById('chatArea');
+                if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+
+            } catch (error) {
+                console.error("خطأ في إرسال رسالة الدفع:", error);
+            }
+        }
+
+        // 2. كود مسح الباكدج (تم إدخاله هنا ليعمل وقت الدفع)
+        if (currentSelectedPack) {
+            // عرف المتغير أولاً .1
+            const packId = currentSelectedPack.getAttribute('data-id');
+            // عشان تنفذ الأوامر try ابدأ الـ .2
+            try {
+                // استخدم المتغير في الحذف بعد ما اتعرف .3
+                await db.collection("pes_packs").doc(packId).delete();
+                
+                // امسح من الشاشة .4
+                currentSelectedPack.remove();
+                currentSelectedPack = null;
+                console.log("تم الحذف بنجاح من الداتابيز والشاشة");
+            } catch (error) {
+                console.error("خطأ في حذف البيانات: ", error);
+            }
+        }
+    }); // إغلاق دالة الضغط على الزرار
+} // إغلاق if (payBtn)
 const firebaseConfig = {
   apiKey: "AIzaSyB3E9e2aFVgrpTm0df7tC_YKskT-MA3hOs",
   authDomain: "my-pes-shop.firebaseapp.com",
