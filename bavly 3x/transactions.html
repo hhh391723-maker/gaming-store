@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>معاملاتي</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .section-header { font-size: 22px; font-weight: 800; margin: 32px 0 16px; color: #fff; border-bottom: 2px solid #f97316; display: inline-block; padding-bottom: 4px; }
+    .empty-msg { text-align: center; color: #94a3b8; padding: 40px 0; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" style="color:#f97316; font-weight:700;">← رجوع</a>
+  <h2 style="margin:0;">سجل المعاملات</h2>
+  <div class="msg-icon-wrap" onclick="openMessages()" title="الرسائل">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+    <span id="msgBadge" class="msg-badge" style="display:none;">0</span>
+  </div>
+</header>
+
+<div class="transactions-container">
+  <div id="trustedSection" style="display:none;">
+    <div class="section-header">طلبات الباكات المعلقة</div>
+    <div id="pendingList"></div>
+  </div>
+
+  <div class="section-header">مشترياتي</div>
+  <div id="purchasesList"></div>
+
+  <div id="myRequestsSection">
+    <div class="section-header">طلباتي المرفوعة</div>
+    <div id="myRequestsList"></div>
+  </div>
+</div>
+
+<!-- Messages Modal -->
+<div id="messagesModal" class="messages-modal">
+  <div class="messages-panel">
+    <div style="padding:16px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">الرسائل</h3>
+      <button onclick="closeMessages()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <div id="messagesList"></div>
+  </div>
+</div>
+
+<div id="siteToast" class="site-toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="common.js"></script>
+<script>
+  const isTrusted = getIsTrusted();
+  const myId = getMyId();
+
+  function copyText(btn, text) {
+    const done = () => { const o = btn.textContent; btn.textContent = 'تم النسخ ✓'; setTimeout(() => btn.textContent = o, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => showToast('مقدرتش أنسخ', 'error'));
+    else { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (e) {} t.remove(); }
+  }
+  function toggleSecret(btn) {
+    const sp = btn.parentElement.querySelector('.secret');
+    const shown = sp.dataset.shown === '1';
+    sp.textContent = shown ? '••••••••' : sp.dataset.val;
+    sp.dataset.shown = shown ? '0' : '1';
+    btn.textContent = shown ? 'إظهار' : 'إخفاء';
+  }
+  function ms(d, f) { return tsMillis(d, f); }
+  function purchaseCard(d) {
+    const date = d.paidAt && d.paidAt.toDate ? d.paidAt.toDate().toLocaleString("ar-EG") : "—";
+    const pay = ({ wallet: 'المحفظة', fawry: 'فوري', visa: 'فيزا' })[d.paymentMethod] || '—';
+    const wrap = document.createElement('div');
+    wrap.className = 'trans-card enhanced';
+    wrap.innerHTML = `
+      <div class="trans-image-wrap">
+        <img src="${esc(d.packImage || 'assets/imgs/freefire.png')}" alt="">
+        <div class="paid-overlay">تم الدفع<br>✅</div>
+      </div>
+      <div class="trans-details">
+        <h3>${esc(d.packName || "حساب")}</h3>
+        <p class="status-paid">تم الشراء بنجاح</p>
+        ${d.orderId ? `<p><span class="order-tag">${esc(d.orderId)}</span></p>` : ''}
+        <p style="color:#94a3b8; font-size:13px;">${esc(date)}</p>
+        <p style="font-size:14px;"><strong>السعر:</strong> ${esc(d.price || '—')}</p>
+        <p style="font-size:14px;"><strong>طريقة الدفع:</strong> ${pay}${d.paymentRef && d.paymentMethod !== 'wallet' ? ' (' + esc(d.paymentRef) + ')' : ''}</p>
+        <p style="font-size:13px; margin-top:6px;"><strong>الإيميل:</strong> <span dir="ltr">${esc(d.email || "—")}</span>
+          ${d.email ? '<button class="copy-btn" data-copy="email">نسخ</button>' : ''}</p>
+        <p style="font-size:13px;"><strong>الباسورد:</strong> <span class="secret" dir="ltr">••••••••</span>
+          ${d.password ? '<button class="copy-btn" data-toggle="1">إظهار</button><button class="copy-btn" data-copy="password">نسخ</button>' : '—'}</p>
+      </div>`;
+    const sec = wrap.querySelector('.secret'); sec.dataset.val = d.password || '';
+    wrap.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText(b, d[b.dataset.copy] || ''));
+    const tg = wrap.querySelector('[data-toggle]'); if (tg) tg.onclick = () => toggleSecret(tg);
+    return wrap;
+  }
+
+  function load() {
+    const purchasesList = document.getElementById("purchasesList");
+    const pendingList = document.getElementById("pendingList");
+    const myRequestsList = document.getElementById("myRequestsList");
+
+    if (isTrusted) {
+      document.getElementById('trustedSection').style.display = 'block';
+      document.getElementById('myRequestsSection').style.display = 'none';
+      // Pending for trusted
+      db.collection("pending_packs").where("status", "==", "pending").onSnapshot(snap => {
+        pendingList.innerHTML = "";
+        if (snap.empty) {
+          pendingList.innerHTML = '<p class="empty-msg">لا توجد طلبات معلقة حالياً.</p>';
+          return;
+        }
+        snap.forEach(doc => {
+          const d = doc.data();
+          const card = document.createElement('div');
+          card.className = 'trans-card';
+          card.innerHTML = `
+            <div style="display:flex; gap:12px; align-items:center;">
+              <img src="${esc(d.mainImage || 'assets/imgs/freefire.png')}" style="width:80px; height:80px; object-fit:cover; border-radius:10px;">
+              <div style="flex:1;">
+                <h3>${esc(d.packName || 'باك')}</h3>
+                <p style="color:#f97316;">${esc(d.packType || '')} — ${esc(d.price || '')}</p>
+                <p style="color:#94a3b8; font-size:13px;">من: ${esc(d.submittedBy || 'زائر')}</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <button class="btn-accept" onclick="acceptFromTrans('${doc.id}', this)">قبول</button>
+              <button class="btn-reject" onclick="rejectFromTrans('${doc.id}', this)">رفض</button>
+            </div>
+          `;
+          pendingList.appendChild(card);
+        });
+      });
+    }
+
+    // Purchases — من غير orderBy (بيحتاج composite index وكان بيفشل ويخفي المشتريات)
+    db.collection("user_transactions").where("buyerId", "==", myId).onSnapshot(snap => {
+      purchasesList.innerHTML = "";
+      if (snap.empty) {
+        purchasesList.innerHTML = '<p class="empty-msg">لا توجد مشتريات حتى الآن.</p>';
+        return;
+      }
+      snap.docs.map(x => x.data()).sort((a, b) => ms(b, 'paidAt') - ms(a, 'paidAt'))
+        .forEach(d => purchasesList.appendChild(purchaseCard(d)));
+    }, err => {
+      console.error(err);
+      purchasesList.innerHTML = '<p class="empty-msg" style="color:#ef4444;">حصل خطأ في تحميل المشتريات، حدّث الصفحة.</p>';
+    });
+
+    // My requests (for non-trusted)
+    if (!isTrusted) {
+      db.collection("pending_packs").where("submittedBy", "==", myId).onSnapshot(snap => {
+        myRequestsList.innerHTML = "";
+        if (snap.empty) {
+          myRequestsList.innerHTML = '<p class="empty-msg">لم ترفع أي طلبات بعد.</p>';
+          return;
+        }
+        snap.forEach(doc => {
+          const d = doc.data();
+          const statusText = d.status === 'pending' ? '<span style="color:#f97316;">في الانتظار <span class="waiting-spinner"></span></span>' : (d.status || 'معلق');
+          myRequestsList.innerHTML += `
+            <div class="trans-card pending">
+              <div style="display:flex; gap:12px; align-items:center;">
+                <img src="${esc(d.mainImage || 'assets/imgs/freefire.png')}" style="width:70px; height:70px; object-fit:cover; border-radius:10px;">
+                <div>
+                  <h3>${esc(d.packName || 'باك')}</h3>
+                  <p>${statusText}</p>
+                  <p style="color:#94a3b8; font-size:13px;">${esc(d.packType || '')} — ${esc(d.price || '')}</p>
+                  <p style="color:#94a3b8; font-size:12px; margin-top:4px;">مقدم الطلب: ${esc(d.submittedBy || '—')} | الرقم: ${localStorage.getItem('userPhone') || 'غير مسجل'}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+  }
+
+  async function acceptFromTrans(pendingId, btn) {
+    const card = btn.closest('.trans-card');
+    if (card) card.classList.add('removing');
+    try {
+      const doc = await db.collection('pending_packs').doc(pendingId).get();
+      if (!doc.exists) return;
+      const data = doc.data();
+      const packData = { ...data };
+      delete packData.status; delete packData.game; delete packData.submittedBy; delete packData.loginType;
+      packData.approvedAt = firebase.firestore.FieldValue.serverTimestamp();
+      packData.approvedBy = myId;
+      const game = data.game || 'freefire';
+      await db.collection(game + '_packs').add(packData);
+      await db.collection('pending_packs').doc(pendingId).delete();
+      await db.collection('notifications').add({
+        toUser: data.submittedBy,
+        type: 'accepted',
+        packName: data.packName || '',
+        packImage: data.mainImage || '',
+        packType: data.packType || '',
+        price: data.price || '',
+        message: 'تم قبول طلبك ونزل الباك على الموقع بنجاح ✅',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      });
+      showToast('تم القبول ونزل الباك', 'success');
+    } catch (e) {
+      showToast('خطأ في القبول', 'error');
+      if (card) card.classList.remove('removing');
+    }
+  }
+
+  async function rejectFromTrans(pendingId, btn) {
+    const card = btn.closest('.trans-card');
+    if (card) card.classList.add('removing');
+    try {
+      const doc = await db.collection('pending_packs').doc(pendingId).get();
+      if (!doc.exists) return;
+      const data = doc.data();
+      await db.collection('pending_packs').doc(pendingId).delete();
+      await db.collection('notifications').add({
+        toUser: data.submittedBy,
+        type: 'rejected',
+        packName: data.packName || '',
+        packImage: data.mainImage || '',
+        packType: data.packType || '',
+        price: data.price || '',
+        message: 'تم رفض الطلب لأنه غير لائق ❌',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      });
+      showToast('تم الرفض', 'success');
+    } catch (e) {
+      showToast('خطأ في الرفض', 'error');
+      if (card) card.classList.remove('removing');
+    }
+  }
+
+  // Messages
+  function openMessages() {
+    document.getElementById('messagesModal').style.display = 'flex';
+    loadMessages();
+  }
+  function closeMessages() {
+    document.getElementById('messagesModal').style.display = 'none';
+  }
+  function loadMessages() {
+    const list = document.getElementById('messagesList');
+    db.collection('notifications').where('toUser', '==', myId).onSnapshot(snap => {
+      list.innerHTML = '';
+      if (snap.empty) {
+        list.innerHTML = '<p class="empty-msg">لا توجد رسائل.</p>';
+        return;
+      }
+      snap.docs.slice().sort((a, b) => ms(b.data(), 'timestamp') - ms(a.data(), 'timestamp')).slice(0, 30).forEach(doc => {
+        const d = doc.data();
+        const statusClass = d.type === 'accepted' ? 'accepted' : 'rejected';
+        list.innerHTML += `
+          <div class="msg-item">
+            <img src="${esc(d.packImage || 'assets/imgs/freefire.png')}" alt="">
+            <div class="msg-content">
+              <h4>${esc(d.packName || 'باك')}</h4>
+              <p class="msg-status ${statusClass}">${esc(d.message || '')}</p>
+              <p>${esc(d.packType || '')} — ${esc(d.price || '')}</p>
+            </div>
+          </div>
+        `;
+        // mark read
+        if (!d.read) doc.ref.update({ read: true });
+      });
+    });
+  }
+
+  function updateBadge() {
+    db.collection('notifications').where('toUser', '==', myId).where('read', '==', false).onSnapshot(snap => {
+      const badge = document.getElementById('msgBadge');
+      const count = snap.size;
+      if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count > 9 ? '9+' : count;
+      } else {
+        badge.style.display = 'none';
+      }
+    });
+  }
+
+  window.onload = () => {
+    if (!localStorage.getItem('userName')) { location.href = 'index.html'; return; }
+    load();
+    updateBadge();
+  };
+</script>
+</body>
+</html>
