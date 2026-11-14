@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>تفاصيل الباك</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <a href="javascript:history.back()" style="color:#f97316; font-weight:700;">← رجوع</a>
+  <h2 style="margin:0; font-size:18px;">تفاصيل الباك</h2>
+  <div class="msg-icon-wrap" onclick="openMessages()" title="الرسائل">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+    <span id="msgBadge" class="msg-badge" style="display:none;">0</span>
+  </div>
+</header>
+
+<main class="pd" id="pd">
+  <div class="pd-hero"><div class="pd-gallery"><div class="pd-slide skeleton"></div></div></div>
+  <div class="pd-info"><div class="skeleton" style="height:26px; width:60%; margin-bottom:12px;"></div><div class="skeleton" style="height:70px;"></div></div>
+</main>
+
+<div class="lightbox" id="lightbox"><button onclick="closeLightbox()">✕</button><img id="lightImg" alt=""></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>window.SHOP_GAME = (new URLSearchParams(location.search).get('game') || 'freefire').replace(/[^a-z]/g, '');</script>
+<script src="common.js"></script>
+<script src="shop.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const packId = params.get('id');
+  const root = document.getElementById('pd');
+  let lastPriceShown = null;
+  let wasAvailable = false;
+
+  function openLightbox(src) {
+    document.getElementById('lightImg').src = src;
+    document.getElementById('lightbox').style.display = 'flex';
+  }
+  function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+  document.getElementById('lightbox').addEventListener('click', e => { if (e.target.id === 'lightbox') closeLightbox(); });
+
+  function stateScreen(icon, title, sub) {
+    root.innerHTML = `<div class="pd-state"><div class="big">${icon}</div><h2 style="color:#fff; margin-bottom:8px;">${esc(title)}</h2><p>${esc(sub)}</p>
+      <button class="action-btn" style="margin-top:22px;" onclick="location.href='${GAME_KEY}.html'">رجوع للباكات</button></div>`;
+  }
+
+  function render(d, sold) {
+    document.title = d.packName || 'تفاصيل الباك';
+    const main = d.mainImage || GAME_FALLBACK_IMG;
+    const imgs = [main].concat(Array.isArray(d.internalImages) ? d.internalImages : []).filter(Boolean);
+    const price = parsePrice(d.price);
+    const showBuy = !isTrusted;
+
+    root.innerHTML = `
+      <section class="pd-hero">
+        <div class="pd-bg" style="background-image:url('${esc(main).replace(/'/g, '%27')}')"></div>
+        <div class="pd-gallery" id="gallery">
+          ${imgs.map(u => `<div class="pd-slide" data-src="${esc(u)}"><img src="${esc(u)}" alt="" loading="lazy"></div>`).join('')}
+        </div>
+        ${imgs.length > 1 ? `<div class="pd-dots" id="dots">${imgs.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}
+        ${sold ? '<div class="pd-sold"><span>تم البيع</span></div>' : ''}
+      </section>
+      <section class="pd-info">
+        <div class="pd-top">
+          <span class="pack-badge">${esc(d.packType || 'حساب')}</span>
+          ${sold ? '<span class="pack-live" style="color:#fecaca; background:rgba(127,29,29,.7);"><i style="background:#ef4444; animation:none;"></i>اتباع</span>'
+                 : '<span class="pack-live"><i></i>متاح الآن</span>'}
+        </div>
+        <h1 class="pd-name">${esc(d.packName || 'باك')}</h1>
+        <div class="pd-chips">
+          <div class="pd-chip"><small>طريقة الربط</small><b>${esc(d.platform || 'غير محدد')}</b></div>
+          <div class="pd-chip"><small>الحالة</small><b>${esc(sold ? 'اتباع' : (d.timerText || 'متاح الآن'))}</b></div>
+          <div class="pd-chip"><small>اللعبة</small><b>${esc((GAME_LABELS[GAME_KEY] || '').replace('حساب ', ''))}</b></div>
+          <div class="pd-chip"><small>النوع</small><b>${esc(d.packType || 'حساب')}</b></div>
+        </div>
+        <div class="pd-note">🔒 بيانات الحساب (الإيميل والباسورد) بتظهرلك في «معاملاتي» بعد الشراء مباشرة، ومبتتعرضش لأي حد قبل كده.</div>
+      </section>
+      ${showBuy ? `
+      <div class="pd-buybar">
+        <div class="pd-price"><small>السعر</small><b id="pdPrice">${esc(d.price || '—')}</b></div>
+        <button class="pd-buy" id="pdBuy" ${sold ? 'disabled' : ''}>${sold ? 'اتباع' : '🛒 اشتري الآن'}</button>
+      </div>` : ''}`;
+
+    // سلايدر: نقاط + تكبير
+    const g = document.getElementById('gallery');
+    g.querySelectorAll('.pd-slide').forEach(s => s.addEventListener('click', () => openLightbox(s.dataset.src)));
+    const dots = document.querySelectorAll('#dots i');
+    if (dots.length) g.addEventListener('scroll', () => {
+      const slide = g.firstElementChild.getBoundingClientRect().width + 12;
+      const idx = Math.min(dots.length - 1, Math.max(0, Math.round(Math.abs(g.scrollLeft) / slide)));
+      dots.forEach((x, i) => x.classList.toggle('on', i === idx));
+    }, { passive: true });
+
+    const buy = document.getElementById('pdBuy');
+    if (buy && !sold) buy.addEventListener('click', () => openPayment(packId));
+
+    // عدّاد السعر بأنيميشن أول مرة
+    const pe = document.getElementById('pdPrice');
+    if (pe && price > 0 && lastPriceShown == null) {
+      const unit = String(d.price).replace(/[\d.,٠-٩٬]+/, '').trim();
+      const t0 = performance.now();
+      (function step(now) {
+        const k = Math.min(1, (now - t0) / 800), v = Math.round(price * (1 - Math.pow(1 - k, 3)));
+        pe.textContent = v + (unit ? ' ' + unit : '');
+        if (k < 1) requestAnimationFrame(step); else pe.textContent = d.price;
+      })(t0);
+    }
+    lastPriceShown = d.price;
+  }
+
+  if (!packId) {
+    stateScreen('🤔', 'مفيش باك محدد', 'ارجع واختار باك من القايمة.');
+  } else {
+    let lastData = null;
+    db.collection(GAME_KEY + '_packs').doc(packId).onSnapshot(doc => {
+      if (!doc.exists) {
+        if (lastData) {                       // اتباع وإحنا فاتحين الصفحة
+          delete livePacks[packId];
+          render(lastData, true);
+          showToast('الباك ده اتباع لحد تاني 😕', 'error');
+        } else {
+          stateScreen('🚫', 'الباك غير موجود', 'يمكن اتباع أو اتحذف.');
+        }
+        return;
+      }
+      lastData = doc.data();
+      livePacks[packId] = lastData;           // عشان مودال الشراء في shop.js
+      // لو الصفحة اتعرضت بالفعل ونفس البيانات، ما نعيدش الرسم (عشان السلايدر)
+      if (!wasAvailable || JSON.stringify(lastData) !== window._lastJson) { render(lastData, false); window._lastJson = JSON.stringify(lastData); }
+      wasAvailable = true;
+    }, err => { console.error(err); stateScreen('⚠️', 'حصل خطأ', 'مقدرتش أحمّل الباك، حدّث الصفحة.'); });
+  }
+</script>
+</body>
+</html>

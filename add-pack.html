@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إضافة باك جديد</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .form-box { max-width: 500px; margin: 40px auto; background:#1e293b; padding:24px; border-radius:16px; position:relative; overflow:hidden; }
+    input, select, textarea { width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid #475569; background:#0f172a; color:#fff; }
+    button { width:100%; padding:14px; background:#f97316; color:#fff; border:none; border-radius:12px; font-weight:700; cursor:pointer; }
+    .form-note { color:#94a3b8; font-size:13px; margin-bottom:16px; text-align:center; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" style="color:#f97316;">← رجوع</a>
+  <h2>إضافة باك</h2>
+  <div class="msg-icon-wrap" onclick="location.href='transactions.html'" title="الرسائل والمعاملات">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+  </div>
+</header>
+<div class="form-box" id="formBox">
+  <p class="form-note" id="roleNote">املأ البيانات ثم ارفع الطلب</p>
+  <select id="game">
+    <option value="freefire">فري فاير</option>
+    <option value="pes">PES</option>
+    <option value="pubg">PUBG</option>
+    <option value="fortnite">Fortnite</option>
+  </select>
+  <input id="packName" placeholder="اسم الباك">
+  <input id="packType" placeholder="نوع الباك">
+  <input id="price" inputmode="numeric" placeholder="السعر بالجنيه (مثال: 150)">
+  <input type="file" id="imageFile" accept="image/*" style="margin-bottom:12px;">
+  <input id="mainImage" placeholder="أو حط رابط الصورة (اختياري)">
+  <input id="platform" placeholder="طريقة الربط">
+  <input id="email" placeholder="الإيميل">
+  <input id="password" placeholder="الباسورد">
+  <textarea id="timerText" placeholder="نص الوقت (اختياري)"></textarea>
+  <button id="submitBtn" onclick="uploadPack()">رفع الباك</button>
+</div>
+<div id="siteToast" class="site-toast"></div>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="common.js"></script>
+<script>
+  const isTrusted = getIsTrusted();
+  const myId = getMyId();
+
+  if (!isTrusted) {
+    document.getElementById('roleNote').textContent = 'أنت مش تراستيد — الطلب هيتراجع وهيتم الموافقة عليه خلال 24 ساعة';
+    document.getElementById('submitBtn').textContent = 'إرسال الطلب للمراجعة';
+  }
+
+  // يصغّر الصورة (حد أقصى 900px و JPEG) عشان ما نعدّيش حد 1MB للدوكيومنت في Firestore
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = e => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const max = 900;
+          const k = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.75));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (!localStorage.getItem('userName')) { location.href = 'index.html'; }
+
+  async function uploadPack() {
+    const game = document.getElementById('game').value;
+    let mainImage = document.getElementById('mainImage').value;
+    const fileInput = document.getElementById('imageFile');
+    if (fileInput.files && fileInput.files[0]) {
+      try {
+        mainImage = await compressImage(fileInput.files[0]);
+      } catch (e) {
+        showToast('الصورة دي مش مقروءة، جرب صورة تانية', 'error');
+        return;
+      }
+    }
+    const data = {
+      packName: document.getElementById('packName').value.trim(),
+      packType: document.getElementById('packType').value.trim(),
+      price: document.getElementById('price').value.trim(),
+      mainImage: mainImage || '',
+      platform: document.getElementById('platform').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value.trim(),
+      timerText: document.getElementById('timerText').value.trim() || 'متاح الآن',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      submittedBy: myId,
+      loginType: localStorage.getItem('loginType') || 'guest'
+    };
+    if (!data.packName || !data.email) {
+      showToast('املأ البيانات الأساسية (الاسم والإيميل)', 'error');
+      return;
+    }
+    if (!(parsePrice(data.price) > 0)) {
+      showToast('اكتب السعر كرقم (مثال: 150 أو 150 جنيه)', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    try {
+      if (isTrusted) {
+        await db.collection(game + '_packs').add(data);
+        showToast('تم رفع الباك بنجاح! هيظهر في قائمة ' + game, 'success');
+        setTimeout(() => { location.href = game + '.html'; }, 1200);
+      } else {
+        // طلب معلق للمراجعة
+        data.status = 'pending';
+        data.game = game;
+        await db.collection('pending_packs').add(data);
+        // رسالة نجاح داخل الواجهة بدل alert المتصفح
+        const box = document.getElementById('formBox');
+        box.innerHTML = `
+          <div class="success-overlay" style="position:relative; min-height:260px; display:flex;">
+            <div class="success-circle"></div>
+            <div class="success-title">تم استلام طلبك</div>
+            <div class="success-sub">الحساب معلق وسيتم الموافقة خلال 24 ساعة<br>ستصلك رسالة عند القبول أو الرفض</div>
+            <div style="margin-top:16px;"><span class="waiting-spinner"></span> في الانتظار</div>
+          </div>
+        `;
+        showToast('تم استلام طلبك وسيتم الموافقة خلال 24 ساعة', 'success');
+      }
+    } catch (e) {
+      showToast('حصل خطأ أثناء الرفع، حاول تاني', 'error');
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>متجر فري فاير</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="loginPage" class="login-wrapper">
+  <div class="login-card">
+    <h2>مرحباً بك</h2>
+    <p>سجل دخولك عشان تشتري الحسابات بسهولة</p>
+
+    <button type="button" onclick="googleLogin()" class="google-pro-btn">
+      <svg width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      المتابعة باستخدام Google
+    </button>
+
+    <div id="guestForm" style="display:none; margin-top:16px;">
+      <input id="guestName" placeholder="اسمك الكامل" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #475569; background:#0f172a; color:#fff;">
+      <input id="guestPhone" placeholder="رقم الموبايل (مثال: 01012345678)" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #475569; background:#0f172a; color:#fff;">
+      <button onclick="confirmGuest()" class="btn-guest" style="margin-top:0; background:#f97316; color:#fff; border:none;">تأكيد الدخول كضيف</button>
+    </div>
+    <button onclick="showGuestForm()" class="btn-guest">الدخول كضيف</button>
+    <button onclick="showTrustedModal()" class="btn-guest" style="margin-top:10px; border-color:#f97316; color:#f97316;">دخول كتراستيد</button>
+  </div>
+</div>
+
+<!-- Trusted Modal -->
+<div id="trustedModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10000; justify-content:center; align-items:center;">
+  <div id="trustedCard" style="position:relative; background:#1e293b; padding:30px; border-radius:16px; width:90%; max-width:360px; text-align:center; overflow:hidden;">
+    <div id="trustedForm">
+      <h3 style="margin-bottom:12px;">دخول التراستيد</h3>
+      <input id="trustedCode" placeholder="كود التفعيل" style="width:100%; padding:12px; border-radius:10px; border:1px solid #475569; background:#0f172a; color:#fff; margin-bottom:12px;">
+      <button onclick="confirmTrusted()" style="width:100%; padding:12px; background:#f97316; color:#fff; border:none; border-radius:10px; font-weight:700;">تأكيد</button>
+      <button onclick="document.getElementById('trustedModal').style.display='none'" style="width:100%; margin-top:8px; padding:10px; background:transparent; color:#94a3b8; border:none;">إلغاء</button>
+    </div>
+    <div id="trustedSuccess" class="success-overlay" style="display:none;">
+      <div class="success-circle"></div>
+      <div class="success-title">تم تسجيل الدخول كتراستيد</div>
+      <div class="success-sub">جاهز لاستقبال الطلبات</div>
+    </div>
+  </div>
+</div>
+
+<!-- Messages Modal -->
+<div id="messagesModal" class="messages-modal">
+  <div class="messages-panel">
+    <div style="padding:16px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">الرسائل</h3>
+      <button onclick="closeMessages()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <div id="messagesList"></div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="profile-modal">
+  <div class="profile-panel">
+    <img id="profileAvatar" src="" alt="Profile">
+    <h3 id="profileName" style="margin-bottom:8px;">الاسم</h3>
+    <div class="profile-info">
+      <p><strong>الإيميل:</strong> <span id="profileEmail">—</span></p>
+      <p><strong>رقم الموبايل:</strong> <span id="profilePhone">—</span></p>
+      <p><strong>نوع الحساب:</strong> <span id="profileRole">ضيف</span></p>
+      <p><strong>رصيد المحفظة:</strong> <span id="profileBalance">…</span></p>
+    </div>
+    <input id="editPhone" placeholder="تغيير رقم الموبايل" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:#fff;">
+    <button onclick="closeProfile(); openWallet();" style="width:100%; padding:10px; background:#22c55e; color:#052e16; border:none; border-radius:8px; font-weight:800; margin-bottom:8px;">💳 شحن المحفظة</button>
+    <button onclick="savePhone()" style="width:100%; padding:10px; background:#f97316; color:#fff; border:none; border-radius:8px; font-weight:700; margin-bottom:8px;">حفظ الرقم</button>
+    <button onclick="logout()" style="width:100%; padding:10px; background:#ef4444; color:#fff; border:none; border-radius:8px; font-weight:700;">تسجيل الخروج</button>
+    <button onclick="closeProfile()" style="width:100%; margin-top:8px; padding:8px; background:transparent; color:#94a3b8; border:none;">إغلاق</button>
+  </div>
+</div>
+
+<!-- Site toast (replaces browser alerts) -->
+<div id="siteToast" class="site-toast"></div>
+
+<header>
+  <img src="assets/svg/logo.jpg" alt="Logo" class="main-logo">
+  <div id="userProfile" style="display:none; align-items:center; gap:12px; position:relative;">
+    <button id="connectBtn" onclick="trustedConnect()" style="display:none; background:#22c55e; color:#fff; border:none; padding:8px 14px; border-radius:8px; font-weight:700;">اتصال</button>
+    <div class="msg-icon-wrap" onclick="openMessages()" title="الرسائل">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <span id="msgBadge" class="msg-badge" style="display:none;">0</span>
+    </div>
+    <img id="userAvatar" src="" alt="User" style="width:40px; height:40px; border-radius:50%; cursor:pointer; border:2px solid #f97316;" onclick="toggleDropdown()">
+    <a href="transactions.html" style="color:#f97316; font-weight:600;">معاملاتي</a>
+    <div id="dropdown" style="display:none; position:absolute; top:50px; left:0; background:#1e293b; border:1px solid #334155; border-radius:12px; min-width:180px; z-index:1000;">
+      <div style="padding:12px; border-bottom:1px solid #334155; color:#94a3b8;" id="dropName"></div>
+      <div onclick="toggleDropdown(); openProfile();" style="padding:12px; cursor:pointer; color:#e2e8f0;">الملف الشخصي</div>
+      <a href="add-pack.html" style="display:block; padding:12px; color:#f97316;" id="addPackLink">إضافة باك</a>
+      <div onclick="logout()" style="padding:12px; cursor:pointer; color:#ef4444;">تسجيل الخروج</div>
+    </div>
+  </div>
+</header>
+
+<div class="games-wrapper">
+  <h1 class="section-title">اختار اللعبة</h1>
+
+  <div class="game-icons-row">
+    <div class="game-tile active-icon" data-game="freefire" style="--c1:#ff7a18; --c2:#ef4444; --n:0" onclick="showGame('freefire', this)">
+      <div class="tile-img"><img src="assets/imgs/freefire.png" alt="Free Fire"></div>
+      <div class="tile-name">فري فاير</div>
+      <span class="tile-count" id="count-freefire">…</span>
+    </div>
+    <div class="game-tile" data-game="pes" style="--c1:#22c55e; --c2:#0ea5e9; --n:1" onclick="showGame('pes', this)">
+      <div class="tile-img"><img src="assets/imgs/pes.png" alt="PES"></div>
+      <div class="tile-name">PES</div>
+      <span class="tile-count" id="count-pes">…</span>
+    </div>
+    <div class="game-tile" data-game="pubg" style="--c1:#facc15; --c2:#f59e0b; --n:2" onclick="showGame('pubg', this)">
+      <div class="tile-img"><img src="assets/imgs/pubg.png" alt="PUBG"></div>
+      <div class="tile-name">PUBG</div>
+      <span class="tile-count" id="count-pubg">…</span>
+    </div>
+    <div class="game-tile" data-game="fortnite" style="--c1:#a855f7; --c2:#3b82f6; --n:3" onclick="showGame('fortnite', this)">
+      <div class="tile-img"><img src="assets/imgs/fortnite.png" alt="Fortnite"></div>
+      <div class="tile-name">Fortnite</div>
+      <span class="tile-count" id="count-fortnite">…</span>
+    </div>
+  </div>
+
+  <div class="interactive-game-card" id="gameCard" style="--c1:#ff7a18; --c2:#ef4444;">
+    <div class="gc-img"><img id="gameImg" src="assets/imgs/freefire.png" alt=""></div>
+    <h2 id="gameTitle">فري فاير</h2>
+    <p id="gameDesc">حسابات فري فاير جاهزة، شحن جواهر، وباكات مميزة.</p>
+    <div class="gc-stat">🟢 <span id="gameStat">…</span></div><br>
+    <button id="gameBtn" class="action-btn" onclick="location.href='freefire.html'">دخول القسم</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="common.js"></script>
+<script>
+  const auth = firebase.auth();
+
+  function googleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then(result => {
+        const user = result.user;
+        saveSession("Google", user.photoURL, user.displayName, user.email);
+        hideSmooth(document.getElementById("loginPage"));
+        showToast('تم تسجيل الدخول بنجاح', 'success');
+      })
+      .catch(err => showToast('حصل خطأ في تسجيل الدخول بجوجل. جرب تاني.', 'error'));
+  }
+
+  function showGuestForm() {
+    document.getElementById('guestForm').style.display = 'block';
+  }
+
+  function confirmGuest() {
+    const name = document.getElementById('guestName').value.trim() || 'زائر';
+    const phone = document.getElementById('guestPhone').value.trim();
+    if (!/^01[0125]\d{8}$/.test(phone)) {
+      showToast('ادخل رقم موبايل مصري صحيح (11 رقم)', 'error');
+      return;
+    }
+    localStorage.setItem('userPhone', phone);
+    saveSession("guest", "https://cdn-icons-png.flaticon.com/512/149/149071.png", name, "guest-" + phone);
+    hideSmooth(document.getElementById("loginPage"));
+    showToast('تم الدخول كضيف بنجاح', 'success');
+  }
+
+  function loginAsGuest() {
+    showGuestForm();
+  }
+
+  function saveSession(type, pic, name, email) {
+    localStorage.setItem("loginType", type);
+    localStorage.setItem("userPicture", pic || "");
+    localStorage.setItem("userName", name || "");
+    localStorage.setItem("userEmail", email || "");
+    if (!localStorage.getItem("userPhone")) localStorage.setItem("userPhone", "");
+    applyLogin(pic, name);
+  }
+
+  function openProfile() {
+    document.getElementById('profileAvatar').src = localStorage.getItem('userPicture') || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+    document.getElementById('profileName').textContent = localStorage.getItem('userName') || 'زائر';
+    document.getElementById('profileEmail').textContent = localStorage.getItem('userEmail') || '—';
+    document.getElementById('profilePhone').textContent = localStorage.getItem('userPhone') || 'غير مسجل';
+    const role = localStorage.getItem('userRole') === 'trusted' ? 'تراستيد (وسيط)' : (localStorage.getItem('loginType') === 'Google' ? 'جوجل' : 'ضيف');
+    document.getElementById('profileRole').textContent = role;
+    document.getElementById('profileBalance').textContent = (window.walletBalance != null ? fmtMoney(window.walletBalance) : '…');
+    document.getElementById('editPhone').value = localStorage.getItem('userPhone') || '';
+    document.getElementById('profileModal').style.display = 'flex';
+  }
+
+  function closeProfile() {
+    document.getElementById('profileModal').style.display = 'none';
+  }
+
+  function savePhone() {
+    const phone = document.getElementById('editPhone').value.trim();
+    if (!/^01[0125]\d{8}$/.test(phone)) {
+      showToast('رقم الموبايل غير صحيح (11 رقم)', 'error');
+      return;
+    }
+    {
+      localStorage.setItem('userPhone', phone);
+      document.getElementById('profilePhone').textContent = phone;
+      showToast('تم حفظ الرقم', 'success');
+    }
+  }
+
+  function showTrustedModal() {
+    document.getElementById('trustedForm').style.display = 'block';
+    document.getElementById('trustedSuccess').style.display = 'none';
+    document.getElementById('trustedModal').style.display = 'flex';
+    document.getElementById('trustedCode').value = '';
+  }
+
+  async function confirmTrusted() {
+    const code = document.getElementById('trustedCode').value.trim();
+    if (!code) {
+      showToast('ادخل الكود', 'error');
+      return;
+    }
+    try {
+      const q = await db.collection('trusted_codes').where('code','==',code).where('used','==',false).get();
+      if (q.empty) {
+        showToast('الكود غلط أو مستخدم', 'error');
+        return;
+      }
+      await q.docs[0].ref.update({used: true});
+      localStorage.setItem('userRole','trusted');
+      saveSession('trusted', 'https://cdn-icons-png.flaticon.com/512/149/149071.png', 'وسيط موثوق', 'trusted');
+      document.getElementById('trustedForm').style.display = 'none';
+      document.getElementById('trustedSuccess').style.display = 'flex';
+      document.getElementById('addPackLink').style.display = 'block';
+      setTimeout(() => {
+        hideSmooth(document.getElementById('trustedModal'));
+        hideSmooth(document.getElementById('loginPage'));
+      }, 1800);
+    } catch(e) {
+      showToast('حصل خطأ', 'error');
+    }
+  }
+
+  async function trustedConnect() {
+    const q = await db.collection('active_chats').where('status','==','waiting').limit(1).get();
+    if (q.empty) {
+      showToast('مفيش مبيعات أو حد مستني في الشات حالياً', 'error');
+      return;
+    }
+    const doc = q.docs[0];
+    const data = doc.data();
+    localStorage.setItem('joinChatId', doc.id);
+    localStorage.setItem('joinPackId', data.packId || '');
+    // حفظ بيانات الباك لو موجودة عشان المعاملات
+    if (data.packName) localStorage.setItem('joinPackName', data.packName);
+    if (data.email) localStorage.setItem('joinPackEmail', data.email);
+    if (data.password) localStorage.setItem('joinPackPassword', data.password);
+    if (data.platform) localStorage.setItem('joinPackPlatform', data.platform);
+    location.href = 'freefire.html';
+  }
+
+  function toggleDropdown() {
+    const d = document.getElementById('dropdown');
+    d.style.display = d.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function logout() {
+    localStorage.clear();
+    location.reload();
+  }
+
+  function applyLogin(pic, name) {
+    const profile = document.getElementById("userProfile");
+    const avatar = document.getElementById("userAvatar");
+    if (profile && avatar) {
+      profile.style.display = "flex";
+      mountWalletChip();
+      avatar.src = pic || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+      document.getElementById('dropName').innerText = name || '';
+      if (localStorage.getItem('userRole') === 'trusted') {
+        document.getElementById('addPackLink').style.display = 'block';
+        document.getElementById('connectBtn').style.display = 'inline-block';
+      }
+      updateMsgBadge();
+    }
+  }
+
+  function openMessages() {
+    document.getElementById('messagesModal').style.display = 'flex';
+    loadMessages();
+  }
+  function closeMessages() {
+    document.getElementById('messagesModal').style.display = 'none';
+  }
+  function loadMessages() {
+    const list = document.getElementById('messagesList');
+    const myId = localStorage.getItem('userEmail') || localStorage.getItem('userName') || 'guest';
+    db.collection('notifications').where('toUser', '==', myId).onSnapshot(snap => {
+      list.innerHTML = '';
+      if (snap.empty) {
+        list.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:30px;">لا توجد رسائل.</p>';
+        return;
+      }
+      const ms = d => (d.timestamp && d.timestamp.toMillis) ? d.timestamp.toMillis() : Date.now();
+      snap.docs.slice().sort((a, b) => ms(b.data()) - ms(a.data())).slice(0, 30).forEach(doc => {
+        const d = doc.data();
+        const statusClass = d.type === 'accepted' ? 'accepted' : 'rejected';
+        list.innerHTML += `
+          <div class="msg-item">
+            <img src="${esc(d.packImage || 'assets/imgs/freefire.png')}" alt="">
+            <div class="msg-content">
+              <h4>${esc(d.packName || 'باك')}</h4>
+              <p class="msg-status ${statusClass}">${esc(d.message || '')}</p>
+              <p>${esc(d.packType || '')} — ${esc(d.price || '')}</p>
+            </div>
+          </div>
+        `;
+        if (!d.read) doc.ref.update({ read: true });
+      });
+    });
+  }
+  function updateMsgBadge() {
+    const myId = localStorage.getItem('userEmail') || localStorage.getItem('userName') || 'guest';
+    if (!myId || myId === 'guest') return;
+    db.collection('notifications').where('toUser', '==', myId).where('read', '==', false).onSnapshot(snap => {
+      const badge = document.getElementById('msgBadge');
+      if (!badge) return;
+      const count = snap.size;
+      if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count > 9 ? '9+' : count;
+      } else {
+        badge.style.display = 'none';
+      }
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("userName")) {
+      applyLogin(localStorage.getItem("userPicture"), localStorage.getItem("userName"));
+      document.getElementById("loginPage").style.display = "none";
+    } else {
+      document.getElementById("loginPage").style.display = "flex";
+    }
+  });
+
+  const games = {
+    freefire: { title: "فري فاير", desc: "حسابات فري فاير جاهزة وباكات مميزة.", link: "freefire.html", c1: "#ff7a18", c2: "#ef4444", img: "assets/imgs/freefire.png" },
+    pes: { title: "PES", desc: "حسابات eFootball جاهزة.", link: "pes.html", c1: "#22c55e", c2: "#0ea5e9", img: "assets/imgs/pes.png" },
+    pubg: { title: "PUBG", desc: "حسابات ببجي.", link: "pubg.html", c1: "#facc15", c2: "#f59e0b", img: "assets/imgs/pubg.png" },
+    fortnite: { title: "Fortnite", desc: "حسابات فورتنايت.", link: "fortnite.html", c1: "#a855f7", c2: "#3b82f6", img: "assets/imgs/fortnite.png" }
+  };
+  const gameCounts = {};
+  let currentGame = 'freefire';
+
+  function countLabel(n) { return n == null ? '…' : (n === 0 ? 'لا يوجد' : n + ' متاح'); }
+
+  function showGame(key, el) {
+    currentGame = key;
+    document.querySelectorAll(".game-tile").forEach(i => i.classList.remove("active-icon"));
+    if (el) el.classList.add("active-icon");
+    const g = games[key], card = document.getElementById('gameCard');
+    card.style.setProperty('--c1', g.c1); card.style.setProperty('--c2', g.c2);
+    document.getElementById("gameTitle").innerText = g.title;
+    document.getElementById("gameDesc").innerText = g.desc;
+    document.getElementById("gameImg").src = g.img;
+    document.getElementById("gameStat").innerText = countLabel(gameCounts[key]);
+    document.getElementById("gameBtn").onclick = () => location.href = g.link;
+    card.classList.remove('swap'); void card.offsetWidth; card.classList.add('swap');
+  }
+
+  // عدّاد الباكات المتاحة لكل لعبة (لحظي)
+  Object.keys(games).forEach(k => {
+    db.collection(k + '_packs').onSnapshot(snap => {
+      gameCounts[k] = snap.size;
+      document.getElementById('count-' + k).textContent = countLabel(snap.size);
+      if (k === currentGame) document.getElementById('gameStat').innerText = countLabel(snap.size);
+    }, () => {});
+  });
+</script>
+</body>
+</html>

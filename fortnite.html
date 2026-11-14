@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حسابات Fortnite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <a href="index.html" style="color:#f97316; font-weight:700;">← رجوع</a>
+  <h2 style="margin:0;">حسابات Fortnite</h2>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div class="msg-icon-wrap" onclick="openMessages()" title="الرسائل">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+      <span id="msgBadge" class="msg-badge" style="display:none;">0</span>
+    </div>
+    <a href="transactions.html" style="color:#94a3b8;">معاملاتي</a>
+  </div>
+</header>
+
+<h1 class="section-title" style="margin-top:32px;">الباكات المتاحة</h1>
+<div class="packs-container" id="packsContainer">
+  <p style="text-align:center; color:#94a3b8; grid-column:1/-1;">جاري تحميل الباكات...</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>window.SHOP_GAME = 'fortnite';</script>
+<script src="common.js"></script>
+<script src="shop.js"></script>
+</body>
+</html>
